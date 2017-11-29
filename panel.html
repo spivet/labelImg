@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>svg画板</title>
+
+	<style>
+		#canva {
+			position: relative;
+			width: 800px;
+			height: 600px;
+			border: 1px solid #ccc;
+		}
+		.paint-toolbar {
+			box-sizing: border-box;
+			position: absolute;
+			left: 0;
+			top: 0;
+			bottom: 0;
+			display: flex;
+		    flex-direction: column;
+			width: 50px;
+			border-right: 1px solid #ccc;
+		}
+		.toolbar-item {
+			display: flex;
+			width: 100%;
+			flex: 1;
+			justify-content: center;
+			align-items: center;
+			border-bottom: 1px solid #ccc;
+			cursor: pointer;
+		}
+		.toolbar-item:last-child {
+			border: 0;
+		}
+		.paint-board {
+			position: absolute;
+			left: 50px;
+			top: 0;
+			right: 0;
+			bottom: 0;
+			overflow: auto;
+		}
+		#board-img {
+			position: absolute;
+			z-index: 0;
+		}
+		#board-svg {
+			position: absolute;
+			z-index: 1;
+		}
+		polygon:hover {
+			opacity: .6 !important;
+		}
+	</style>
+</head>
+<body>
+	<div id="canva">
+<!-- 		<div id="board-tool"></div>
+		<div id="board-panel">
+			<img src="003.jpg" alt="" id="board-img">
+			<svg xmlns="http://www.w3.org/2000/svg" version="1.1" id="board-svg">
+			   <circle cx="10" cy="10" r="4" stroke="black" stroke-width="1" fill="red" />
+			   <line x1="10" y1="10" x2="90" y2="90" style="stroke:rgb(255,0,0);stroke-width:1" />
+			   <circle cx="90" cy="90" r="4" stroke="black" stroke-width="1" fill="red" />
+			</svg>
+		</div> -->
+	</div>
+
+	<script src="panel.js"></script>
+	<script>
+		var svgboard = new Svgpanel({
+			el: document.getElementById('canva')
+		})
+		svgboard.addImg('003.jpg')
+	</script>
+</body>
+</html>
