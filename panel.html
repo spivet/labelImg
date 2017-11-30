@@ -56,17 +56,9 @@
 	</style>
 </head>
 <body>
-	<div id="canva">
-<!-- 		<div id="board-tool"></div>
-		<div id="board-panel">
-			<img src="003.jpg" alt="" id="board-img">
-			<svg xmlns="http://www.w3.org/2000/svg" version="1.1" id="board-svg">
-			   <circle cx="10" cy="10" r="4" stroke="black" stroke-width="1" fill="red" />
-			   <line x1="10" y1="10" x2="90" y2="90" style="stroke:rgb(255,0,0);stroke-width:1" />
-			   <circle cx="90" cy="90" r="4" stroke="black" stroke-width="1" fill="red" />
-			</svg>
-		</div> -->
-	</div>
+	<div id="canva"></div>
+
+	<button id="btn" type="button">输出</button>
 
 	<script src="panel.js"></script>
 	<script>
@@ -74,6 +66,9 @@
 			el: document.getElementById('canva')
 		})
 		svgboard.addImg('003.jpg')
+		document.getElementById('btn').onclick = function (e) {
+			console.log(svgboard.output())
+		}
 	</script>
 </body>
 </html>

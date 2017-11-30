@@ -11,11 +11,21 @@ var Svgpanel = (function () {
 		this.ky = 1;
 		this.imgWidth = 0;
 		this.imgHeight = 0;
-		this.points = [];
 
-		// this.count = 0;
-		this.drawingStack = [];
-		this.outputData = [];
+		this.count = 0;
+		this.pointsConfig = {
+			points: [],
+			stack: []
+		}
+		this.rectConfig = {
+			points: [],
+			stack: []
+		}
+		this.polygonConfig = {
+			points: [],
+			stack: []
+		}
+		this.outputData = []
 		_self = this;
 
 		this.TOOL = [
@@ -50,7 +60,15 @@ var Svgpanel = (function () {
 			}
 		},
 		output: function () {
-			return this.outputData;
+			var _svg = document.getElementById('board-svg');
+			var outputData = []
+			Array.prototype.forEach.call(_svg.children, function (item, index) {
+				var dataItem = {};
+				dataItem.index = index + 1;
+				dataItem.position = JSON.parse(item.dataset.position);
+				outputData.push(dataItem)
+			})
+			return outputData;
 		}
 	}
 
@@ -126,39 +144,41 @@ var Svgpanel = (function () {
 		})
 	}
 	function magnifyImg(img, svg) {
-		_img.style.width = _img.clientWidth + 100 + 'px';
-		_svg.style.width = _img.clientWidth + 'px';
-		_svg.style.height = _img.clientHeight + 'px';
+		img.style.width = img.clientWidth + 100 + 'px';
+		svg.style.width = img.clientWidth + 'px';
+		svg.style.height = img.clientHeight + 'px';
 
 		// svg 跟随图片一起缩放时，需要计算出 svg 缩放前后的宽高比例系数
 		// 并且以后的坐标都会乘以这个系数，否则绘制的坐标是错误的
-		_self.kx = _self.imgWidth / _img.clientWidth
-		_self.ky = _self.imgHeight / _img.clientHeight
+		_self.kx = _self.imgWidth / img.clientWidth
+		_self.ky = _self.imgHeight / img.clientHeight
 
 	}
 	function shrinkImg(img, svg) {
-		_img.style.width = _img.clientWidth - 100 + 'px';
-		_svg.style.width = _img.clientWidth + 'px';
-		_svg.style.height = _img.clientHeight + 'px';
-		_self.kx = _self.imgWidth / _img.clientWidth
-		_self.ky = _self.imgHeight / _img.clientHeight
+		img.style.width = img.clientWidth - 100 + 'px';
+		svg.style.width = img.clientWidth + 'px';
+		svg.style.height = img.clientHeight + 'px';
+		_self.kx = _self.imgWidth / img.clientWidth
+		_self.ky = _self.imgHeight / img.clientHeight
 
 	}
 	function repeal(parent) {
+		if (_self.polygonConfig.stack.length > 0) {
+			parent.removeChild(_self.polygonConfig.stack[_self.polygonConfig.stack.length - 1])
+			_self.polygonConfig.points.pop()
+			_self.polygonConfig.stack.pop()
+
+			return;
+		}
+
 		if (parent.lastChild) {
 			parent.removeChild(parent.lastChild)
-		}
-		if (_self.drawingStack.length > 0) {
-			// parent.removeChild(_self.drawingStack[_self.drawingStack.length - 1])
-			parent.removeChild(parent.lastChild)
-			_self.points.pop()
-			// _self.drawingStack.pop()
 		}
 	}
 	function clean(parent) {
 		parent.innerHTML = ''
-		_self.points = []
-		_self.drawingStack = [];
+		_self.polygonConfig.points = []
+		_self.polygonConfig.stack = [];
 	}
 	// 绘制图形的方法
 	function draw() {
@@ -167,13 +187,13 @@ var Svgpanel = (function () {
 
 		switch (_self.shape) {
 			case 'point':
-				drawpoint(_svg)
+				drawPoint(_svg)
 				break;
 			case 'rect':
-				drawrect(_svg)
+				drawRect(_svg)
 				break;
 			case 'polygon':
-				drawpolygon(_svg)
+				drawPolygon(_svg)
 				break;
 			default:
 				// statements_def
@@ -181,74 +201,104 @@ var Svgpanel = (function () {
 		}
 		
 	}
-	function drawpoint(parent, attrs) {
+	function drawPoint(parent, attrs) {
 		parent.addEventListener('mousedown', function (e){
 			_self.x = e.offsetX * _self.kx;
 			_self.y = e.offsetY * _self.ky;
-			var point = createPoint(_self.count++, _self.x, _self.y, 1)
-			point.className = 'point'
+			var attrs = {
+				'cx': _self.x,
+				'cy': _self.y,
+				'r': 1,
+				'stroke': 'black',
+				'fill': 'red',
+				'data-position': `[${_self.x}, ${_self.y}]`
+			};
+			var point = createPoint(attrs)
 			parent.appendChild(point)
-		},false)
-		parent.addEventListener('mouseover', function (e){
-			if (e.target.className === 'point') {
-			}
+
+			// 往输出数据 outputData 变量里写值
+			// _self.pointsConfig.points.push([_self.x, _self.y])
+			// var obj = {
+			// 	index: _self.count++,
+			// 	position: _self.pointsConfig.points
+			// }
+			// _self.outputData.data.push()
 		},false)
 
 	}
-	function drawrect(parent, attrs) {
-		var x, y;
+	function drawRect(parent) {
+		var x, y, width, height;
 		parent.onmousedown = function (e) {
 			_self.x = e.offsetX * _self.kx;
 			_self.y = e.offsetY * _self.ky;
-			var rect = createRect(_self.x, _self.y, 0, 0)
+			var attrs = {
+				x: _self.x,
+				y: _self.y,
+				width: 0,
+				height: 0,
+				style: 'fill:none;stroke:purple;stroke-width:1'
+			}
+			var rect = createRect(attrs)
 			parent.appendChild(rect)
 			parent.onmousemove = function (e) {
 				e.offsetX * _self.kx > _self.x ? x = _self.x : x = e.offsetX * _self.kx
 				e.offsetY * _self.ky > _self.y ? y = _self.y : y = e.offsetY * _self.ky
+				width = Math.abs(e.offsetX * _self.kx - _self.x)
+				height = Math.abs(e.offsetY * _self.ky - _self.y)
 				rect.setAttribute('x', x)
 				rect.setAttribute('y', y)
-				rect.setAttribute('width', Math.abs(e.offsetX * _self.kx - _self.x))
-				rect.setAttribute('height', Math.abs(e.offsetY * _self.ky - _self.y))
+				rect.setAttribute('width', width)
+				rect.setAttribute('height', height)
 			}
 			parent.onmouseup = function () {
 				parent.onmousemove = null
+				rect.setAttribute('data-position', `[[${x},${y}], [${x + width},${y}], [${x+width},${y+height}], [${x},${y+height}]]`)
 			}
-
 		}
 	}
-	function drawpolygon(parent) {
+	function drawPolygon(parent) {
 		// 绘制栈，保存起始点和每条线的 DOM 节点，当多边形绘制完毕后，需要删除之前的circle和line节点
 		parent.addEventListener('click', function (e) {
 			if(e.target.tagName === 'circle') {
-				var points = _self.points.join(' ')
+				var points = _self.polygonConfig.points.join(' ')
 				var polygon = createPolygon(points)
+				polygon.setAttribute('data-position', JSON.stringify(_self.polygonConfig.points))
 				parent.appendChild(polygon)
-				_self.drawingStack.forEach(function (item) {
+				_self.polygonConfig.stack.forEach(function (item) {
 					parent.removeChild(item)
 				})
-				_self.drawingStack = []
-				_self.points = []
+				_self.polygonConfig.stack = []
+				_self.polygonConfig.points = []
 			} else {
 				// 传给图形的坐标参数，需要乘以 svg 缩放前后的宽高比例系数
 				_self.x = e.offsetX * _self.kx;
 				_self.y = e.offsetY * _self.ky;
-				_self.points.push([_self.x, _self.y])
-				var pointsLen = _self.points.length;
+				_self.polygonConfig.points.push([_self.x, _self.y])
+				var pointsLen = _self.polygonConfig.points.length;
 				if (pointsLen === 1) {
-					var circle = createPoint(_self.count++, _self.x, _self.y, 4)
+					var attrs = {
+						'cx': _self.x,
+						'cy': _self.y,
+						'r': 4,
+						'stroke': 'black',
+						'fill': 'red'
+					};
+					var circle = createPoint(attrs)
 					this.appendChild(circle)
-					_self.drawingStack.push(circle)
+					_self.polygonConfig.stack.push(circle)
 					return;
 				}
 				if(pointsLen > 1) {
-					var x1 = _self.points[pointsLen - 2][0],
-					 	y1 = _self.points[pointsLen - 2][1],
-						x2 = _self.points[pointsLen - 1][0],
-						y2 = _self.points[pointsLen - 1][1];
-
-					var line = createLine(_self.count++, x1, y1, x2, y2)
+					var attrs = {
+						'x1': _self.polygonConfig.points[pointsLen - 2][0],
+						'y1': _self.polygonConfig.points[pointsLen - 2][1],
+						'x2': _self.polygonConfig.points[pointsLen - 1][0],
+						'y2': _self.polygonConfig.points[pointsLen - 1][1],
+						'style': 'stroke:rgb(255,0,0);stroke-width:1'
+					}
+					var line = createLine(attrs)
 					this.appendChild(line)
-					_self.drawingStack.push(line)
+					_self.polygonConfig.stack.push(line)
 				}				
 			}
 		})
@@ -257,53 +307,27 @@ var Svgpanel = (function () {
 	// 创建 svg 图形
 	/**
 	 * 创建 圆形
-	 * @param  {[type]} count [description]
-	 * @param  {[type]} x     原点的 x 值
-	 * @param  {number} y     原点的 y 值
-	 * @param  {Number} r     圆的半径
+	 * @param  {Object} attrs     圆的 html 属性
 	 * @return {DOM Node}     DOM节点
 	 */
-	function createPoint(count, x, y, r) {
-		var	opt = {
-			// id: 'circle' + count,
-			cx: x,
-			cy: y,
-			r: r,
-			stroke: 'black',
-			fill: 'red'
-		};
-		var circle = makeElementNS('circle', opt)
+	function createPoint(attrs) {
+		var circle = makeElementNS('circle', attrs)
 		circle.addEventListener('mouseover', function (e) {
 			e.target.setAttribute('r', 10)
 		})
 		circle.addEventListener('mouseout', function (e) {
-			e.target.setAttribute('r', r)
+			e.target.setAttribute('r', attrs.r)
 		})
 			
 		return circle;
 	}
-	function createLine(count, x1, y1, x2, y2) {
-		var	opt = {
-			// id: 'line' + count,
-			x1: x1,
-			y1: y1,
-			x2: x2,
-			y2: y2,
-			style: 'stroke:rgb(255,0,0);stroke-width:1'
-		};
-		var line = makeElementNS('line', opt)
+	function createLine(attrs) {
+		var line = makeElementNS('line', attrs)
 
 		return line;
 	}
-	function createRect(x, y, width, height) {
-		var opt = {
-			x: x,
-			y: y,
-			width: width,
-			height: height,
-			style: 'fill:none;stroke:purple;stroke-width:1'
-		};
-		var rect = makeElementNS('rect', opt)
+	function createRect(attrs) {
+		var rect = makeElementNS('rect', attrs)
 
 		return rect;
 	}
