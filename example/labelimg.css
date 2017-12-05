@@ -1,0 +1,48 @@
+		#canva {
+			position: relative;
+			width: 800px;
+			height: 600px;
+			border: 1px solid #ccc;
+		}
+		.paint-toolbar {
+			box-sizing: border-box;
+			position: absolute;
+			left: 0;
+			top: 0;
+			bottom: 0;
+			display: flex;
+		    flex-direction: column;
+			width: 50px;
+			border-right: 1px solid #ccc;
+		}
+		.toolbar-item {
+			display: flex;
+			width: 100%;
+			flex: 1;
+			justify-content: center;
+			align-items: center;
+			border-bottom: 1px solid #ccc;
+			cursor: pointer;
+		}
+		.toolbar-item:last-child {
+			border: 0;
+		}
+		.paint-board {
+			position: absolute;
+			left: 50px;
+			top: 0;
+			right: 0;
+			bottom: 0;
+			overflow: auto;
+		}
+		#board-img {
+			position: absolute;
+			z-index: 0;
+		}
+		#board-svg {
+			position: absolute;
+			z-index: 1;
+		}
+		polygon:hover {
+			opacity: .6 !important;
+		}

@@ -1,0 +1,11 @@
+{
+  "name": "labelImg.js",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/Mcbai/labelImg.js.git",
+  "author": "Mcbai <24224596@qq.com>",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.16.2"
+  }
+}

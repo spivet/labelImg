@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>人脸标注</title>
+
+	<link rel="stylesheet" href="labelimg.css">
+</head>
+<body>
+	<div id="canva"></div>
+	<div>
+		<button id="next" type="button">下一题</button>	
+	</div>
+
+	<script src="http://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
+	<script src="labelimg.js"></script>
+	<script>
+		var list = [
+			{imgUrl: 'img/1.jpg', labeled: false},
+			{imgUrl: 'img/2.jpg', labeled: false},
+			{imgUrl: 'img/3.jpg', labeled: false},
+			{imgUrl: 'img/4.jpg', labeled: false},
+			{imgUrl: 'img/5.jpg', labeled: false}
+		]
+		var label = new Labelimg({
+			el: document.getElementById('canva'),
+			shape: 'point'
+		})
+		label.addImg(list[0].imgUrl)
+		var next = document.getElementById('next');
+		var curentItem = 0;
+		next.onclick = function () {
+				curentItem++;
+			if(curentItem < list.length) {
+				label.addImg(list[curentItem].imgUrl)				
+			} else {
+				alert('答完了')
+			}
+		}
+		// getQuestions()
+
+		var questionList = []
+		function getQuestions() {
+			$.ajax({
+				url: '/getQuestions',
+				success: function (data) {
+					console.log(data)
+					questionList = data
+				}
+			})
+		}
+	</script>
+</body>
+</html>
