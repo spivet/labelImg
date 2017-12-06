@@ -1,48 +1,109 @@
-		#canva {
-			position: relative;
-			width: 800px;
-			height: 600px;
-			border: 1px solid #ccc;
-		}
-		.paint-toolbar {
-			box-sizing: border-box;
-			position: absolute;
-			left: 0;
-			top: 0;
-			bottom: 0;
-			display: flex;
-		    flex-direction: column;
-			width: 50px;
-			border-right: 1px solid #ccc;
-		}
-		.toolbar-item {
-			display: flex;
-			width: 100%;
-			flex: 1;
-			justify-content: center;
-			align-items: center;
-			border-bottom: 1px solid #ccc;
-			cursor: pointer;
-		}
-		.toolbar-item:last-child {
-			border: 0;
-		}
-		.paint-board {
-			position: absolute;
-			left: 50px;
-			top: 0;
-			right: 0;
-			bottom: 0;
-			overflow: auto;
-		}
-		#board-img {
-			position: absolute;
-			z-index: 0;
-		}
-		#board-svg {
-			position: absolute;
-			z-index: 1;
-		}
-		polygon:hover {
-			opacity: .6 !important;
-		}
+.paint-toolbar {
+    box-sizing: border-box;
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    width: 50px;
+    border-right: 1px solid #ccc;
+}
+
+.toolbar-item {
+    display: flex;
+    width: 100%;
+    flex: 1;
+    justify-content: center;
+    align-items: center;
+    border-bottom: 1px solid #ccc;
+    cursor: pointer;
+}
+
+.toolbar-item:last-child {
+    border: 0;
+}
+
+.toolbar-item-color {
+	flex-direction: column;
+}
+
+.color-box {
+	display: none;
+    flex: 1;
+    width: 100%;
+	flex-direction: column;
+}
+
+.toolbar-item-color:hover .color-box {
+	display: flex;
+}
+
+.color-box span {
+	flex: 1;
+}
+
+.paint-board {
+    position: absolute;
+    left: 50px;
+    top: 0;
+    right: 200px;
+    bottom: 0;
+    overflow: auto;
+}
+
+.paint-board::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+}
+
+.paint-board::-webkit-scrollbar-track {
+    background: #E6E6E6;
+    border-radius: 2px;
+}
+
+.paint-board::-webkit-scrollbar-thumb {
+    background: #747474;
+    border-radius: 2px;
+}
+
+.paint-board::-webkit-scrollbar-corner {
+    background: #E6E6E6;
+}
+
+#board-img {
+    position: absolute;
+    z-index: 0;
+}
+
+#board-svg {
+    position: absolute;
+    z-index: 1;
+}
+
+polygon:hover {
+    opacity: .6 !important;
+}
+
+.paint-labels {
+	position: absolute;
+	right: 70px;
+	list-style: none;
+}
+
+.labels-item {
+
+}
+
+.labels-item input {
+	width: 60px;
+}
+
+.paint-tip {
+	position: absolute;
+	display: none;
+	padding: 5px;
+	background-color: #f8f8f8;
+	border: 1px solid #ccc;
+	color: #000;
+}

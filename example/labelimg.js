@@ -12,17 +12,12 @@ var Labelimg = (function () {
 		this.imgWidth = 0;
 		this.imgHeight = 0;
 
-		this.count = 0;
-		this.pointsConfig = {
-			points: [],
-			stack: []
-		}
-		this.rectConfig = {
-			points: [],
-			stack: []
-		}
+		this.color = '#ff0000';
 		this.polygonConfig = {
 			points: [],
+			stack: []
+		}
+		this.labelsConfig = {
 			stack: []
 		}
 		this.outputData = []
@@ -34,6 +29,7 @@ var Labelimg = (function () {
 			// { NAME: 'circle', ICON: '\u25EF', TITLE: '圆', isShape: true },
 			// { NAME: 'rect', ICON: '\u25AD', TITLE: '矩形', isShape: true },
 			// { NAME: 'polygon', ICON: '\u2606', TITLE: '多边形', isShape: true },
+			{ NAME: 'color', ICON: '', TITLE: '颜色' },
 			{ NAME: 'magnify', ICON: '\u29FE', TITLE: '放大' },
 			{ NAME: 'shrink', ICON: '\u29FF', TITLE: '缩小' },
 			{ NAME: 'repeal', ICON: '\u23F4', TITLE: '撤销' },
@@ -81,7 +77,9 @@ var Labelimg = (function () {
 
 	function renderUI(target, tools) {
 		renderToolbar(target, tools)
-		renderboard(target)
+		renderBoard(target)
+		renderLabels(target)
+		renderTip(target)
 	}
 	function renderToolbar(target, tools) {
 		var toolbar = document.createElement('div');
@@ -89,11 +87,16 @@ var Labelimg = (function () {
 
 		var toolbarHtml = '';
 		tools.forEach(function (tool) {
-			if (tool.isShape) {
+			if (tool.NAME === 'color') {
 				toolbarHtml += `
-					<span class="toolbar-item toolbar-item-shape" title="${tool.TITLE}" data-name="${tool.NAME}">
-						${tool.ICON}
-					</span>
+					<div class="toolbar-item toolbar-item-color" title="${tool.TITLE}" data-name="${tool.NAME}" style="background-color:#ff0000">
+						<div class="color-box">
+							<span data-color="#ff0000" style="background-color:#ff0000"></span>
+							<span data-color="#00db00" style="background-color:#00db00"></span>
+							<span data-color="#f9f900" style="background-color:#f9f900"></span>
+							<span data-color="#0072e3" style="background-color:#0072e3"></span>
+						</div>
+					</div>
 				`
 			} else {
 				toolbarHtml += `
@@ -108,7 +111,7 @@ var Labelimg = (function () {
 
 		toolEvent()
 	}
-	function renderboard(target) {
+	function renderBoard(target) {
 		var board = document.createElement('div');
 		board.className = 'paint-board';
 		target.appendChild(board)
@@ -118,12 +121,39 @@ var Labelimg = (function () {
 		var _svg = document.getElementById('board-svg')
 		_svg.style.width = board.clientWidth + 'px';
 		_svg.style.height = board.clientHeight + 'px';
+		_svg.addEventListener('mouseover', function (e) {
+			if(e.target.nodeType === 1 && e.target.tagName !== 'svg') {
+				var index = e.target.dataset.index || '',
+					name = e.target.dataset.name || '';
+				var tip = document.getElementsByClassName('paint-tip')[0];
+				tip.textContent = index + ' ' + name
+				tip.style.display = 'block'
+				tip.style.left = e.offsetX + 50 + 'px'
+				tip.style.top = e.offsetY - 50 + 'px'				
+			}
+		})
+		_svg.addEventListener('mouseout', function () {
+			var tip = document.getElementsByClassName('paint-tip')[0];
+			tip.style.display = 'none'
+		})
+	}
+	function renderLabels(target) {
+		var labels = document.createElement('ul');
+		labels.className = 'paint-labels';
+		target.appendChild(labels);
+	}
+	function renderTip(target) {
+		var tip = document.createElement('div');
+		tip.className = 'paint-tip';
+		target.appendChild(tip)
 	}
 	// toobar 里每个按钮被点击后所执行的操作
 	// 在 renderToolbar() 函数的末尾调用，当 toobar 渲染完毕后执行
 	function toolEvent() {
 		var _toolItems = document.getElementsByClassName('toolbar-item');
 		var _toolbar = document.getElementsByClassName('paint-toolbar')[0];
+
+						changeColor()
 		_toolbar.addEventListener('click', function (e) {
 			var target = e.target;
 			// 由于渲染顺序的原因，暂时需要在点击 toolbar 里的按钮时获取 svg 和 img
@@ -138,10 +168,10 @@ var Labelimg = (function () {
 						shrinkImg(_img, _svg)
 						break;
 					case 'repeal':
-						repeal(_svg)
+						repeal()
 						break;
 					case 'clean':
-						clean(_svg)
+						clean()
 						break;
 					default:
 						// statements_def
@@ -149,6 +179,16 @@ var Labelimg = (function () {
 				}
 			}
 		})
+	}
+	function changeColor() {
+		var colorBox = document.getElementsByClassName('color-box')[0];
+		var colors = colorBox.children;
+		for(let i = 0; i < colors.length; i++) {
+			colors[i].onclick = function (e) {
+				_self.color = colors[i].dataset.color;
+				colorBox.parentNode.style.backgroundColor = colors[i].dataset.color;
+			}
+		}
 	}
 	function magnifyImg(img, svg) {
 		img.style.width = img.clientWidth + 100 + 'px';
@@ -169,21 +209,27 @@ var Labelimg = (function () {
 		_self.ky = _self.imgHeight / img.clientHeight
 
 	}
-	function repeal(parent) {
+	function repeal() {
+		var _svg = document.getElementById('board-svg');
+		var _labels = document.getElementsByClassName('paint-labels')[0];
 		if (_self.polygonConfig.stack.length > 0) {
-			parent.removeChild(_self.polygonConfig.stack[_self.polygonConfig.stack.length - 1])
+			_svg.removeChild(_self.polygonConfig.stack[_self.polygonConfig.stack.length - 1])
 			_self.polygonConfig.points.pop()
 			_self.polygonConfig.stack.pop()
 
 			return;
 		}
 
-		if (parent.lastChild) {
-			parent.removeChild(parent.lastChild)
+		if (_svg.lastChild) {
+			_svg.removeChild(_svg.lastChild)
+			_labels.removeChild(_labels.lastChild)
 		}
 	}
-	function clean(parent) {
-		parent.innerHTML = ''
+	function clean() {
+		var _svg = document.getElementById('board-svg');
+		var _labels = document.getElementsByClassName('paint-labels')[0];
+		_labels.innerHTML = ''
+		_svg.innerHTML = ''
 		_self.polygonConfig.points = []
 		_self.polygonConfig.stack = [];
 	}
@@ -217,19 +263,14 @@ var Labelimg = (function () {
 				'cy': _self.y,
 				'r': 2,
 				'stroke': 'yellow',
-				'fill': 'red',
+				'fill': _self.color,
+				'data-index': parent.children.length,
 				'data-position': `[${_self.x}, ${_self.y}]`
 			};
 			var point = createPoint(attrs)
 			parent.appendChild(point)
 
-			// 往输出数据 outputData 变量里写值
-			// _self.pointsConfig.points.push([_self.x, _self.y])
-			// var obj = {
-			// 	index: _self.count++,
-			// 	position: _self.pointsConfig.points
-			// }
-			// _self.outputData.data.push()
+			createLabelsItem(parent.children.length)
 		},false)
 
 	}
@@ -243,7 +284,8 @@ var Labelimg = (function () {
 				y: _self.y,
 				width: 0,
 				height: 0,
-				style: 'fill:none;stroke:purple;stroke-width:1'
+				stroke: _self.color,
+				style: 'fill:none;stroke-width:1'
 			}
 			var rect = createRect(attrs)
 			parent.appendChild(rect)
@@ -260,6 +302,9 @@ var Labelimg = (function () {
 			parent.onmouseup = function () {
 				parent.onmousemove = null
 				rect.setAttribute('data-position', `[[${x},${y}], [${x + width},${y}], [${x+width},${y+height}], [${x},${y+height}]]`)
+				rect.setAttribute('data-index', parent.children.length)
+
+				createLabelsItem(parent.children.length)
 			}
 		}
 	}
@@ -274,6 +319,8 @@ var Labelimg = (function () {
 				_self.polygonConfig.stack.forEach(function (item) {
 					parent.removeChild(item)
 				})
+				polygon.setAttribute('data-index', parent.children.length)
+				createLabelsItem(parent.children.length)
 				_self.polygonConfig.stack = []
 				_self.polygonConfig.points = []
 			} else {
@@ -288,7 +335,7 @@ var Labelimg = (function () {
 						'cy': _self.y,
 						'r': 4,
 						'stroke': 'black',
-						'fill': 'red'
+						'fill': _self.color
 					};
 					var circle = createPoint(attrs)
 					this.appendChild(circle)
@@ -301,7 +348,8 @@ var Labelimg = (function () {
 						'y1': _self.polygonConfig.points[pointsLen - 2][1],
 						'x2': _self.polygonConfig.points[pointsLen - 1][0],
 						'y2': _self.polygonConfig.points[pointsLen - 1][1],
-						'style': 'stroke:rgb(255,0,0);stroke-width:1'
+						'stroke': _self.color,
+						'style': 'stroke-width:1'
 					}
 					var line = createLine(attrs)
 					this.appendChild(line)
@@ -341,11 +389,30 @@ var Labelimg = (function () {
 	function createPolygon(points) {
 		var opt = {
 			points: points,
-			style: 'fill:#f33;stroke:purple;stroke-width:1;opacity:.3'
+			fill: _self.color,
+			style: 'stroke:purple;stroke-width:1;opacity:.3'
 		};
 		var polygon = makeElementNS('polygon', opt)
 
 		return polygon;
+	}
+	function createLabelsItem(index) {
+		var item = document.createElement('li');
+		item.className = 'labels-item';
+		var itemStr = `
+			<span>${index}</span>
+			<input type="text">
+		`
+		item.innerHTML = itemStr;
+		_self.labelsConfig.stack.push(item)
+		var labels = document.getElementsByClassName('paint-labels')[0]
+		labels.appendChild(item)
+
+		var input = item.getElementsByTagName('input')[0]
+		input.onchange = function (e) {
+			var _svg = document.getElementById('board-svg');
+			_svg.children[index-1].setAttribute('data-name', input.value)
+		}
 	}
 	/**
 	 * 创建 XML 元素
