@@ -85,6 +85,12 @@ polygon:hover {
     opacity: .6 !important;
 }
 
+#board-xaxis,
+#board-yaxis {
+    position: absolute;
+    background-color: #000;
+}
+
 .paint-labels {
 	position: absolute;
 	right: 70px;

@@ -1,5 +1,6 @@
 var Labelimg = (function () {
 	var _self; // 该插件内的全局变量，用来获取 this
+	var _xaxis, _yaxis;
 
 	function Labelimg(opt) {
 		this.boardWrap = opt.el;
@@ -59,6 +60,8 @@ var Labelimg = (function () {
 
 				_self.kx = 1;
 				_self.ky = 1;
+				var board = document.getElementsByClassName('paint-board')[0]
+				renderAxis(board)
 			}
 			clean(_svg)
 		},
@@ -116,11 +119,14 @@ var Labelimg = (function () {
 		board.className = 'paint-board';
 		target.appendChild(board)
 		// TODO 添加svg优化，是否要用 appendChild()
+		renderSvg(board)
+	}
+	function renderSvg(parent) {
 		var svg = '<svg id="board-svg"></svg>';
-		board.innerHTML = svg;
+		parent.innerHTML = svg;
 		var _svg = document.getElementById('board-svg')
-		_svg.style.width = board.clientWidth + 'px';
-		_svg.style.height = board.clientHeight + 'px';
+		_svg.style.width = parent.clientWidth + 'px';
+		_svg.style.height = parent.clientHeight + 'px';
 		_svg.addEventListener('mouseover', function (e) {
 			if(e.target.nodeType === 1 && e.target.tagName !== 'svg') {
 				var index = e.target.dataset.index || '',
@@ -129,13 +135,39 @@ var Labelimg = (function () {
 				tip.textContent = index + ' ' + name
 				tip.style.display = 'block'
 				tip.style.left = e.offsetX + 50 + 'px'
-				tip.style.top = e.offsetY - 50 + 'px'				
+				tip.style.top = e.offsetY - 50 + 'px'
 			}
 		})
 		_svg.addEventListener('mouseout', function () {
 			var tip = document.getElementsByClassName('paint-tip')[0];
 			tip.style.display = 'none'
 		})
+	}
+	function renderAxis(target) {
+		var xaxis = document.createElement('div'),
+			yaxis = document.createElement('div');
+		xaxis.id = 'board-xaxis'
+		xaxis.style.width = _self.imgWidth + 'px'
+		xaxis.style.height = '2px'
+		yaxis.id = 'board-yaxis'
+		yaxis.style.width = '2px'
+		yaxis.style.height = _self.imgHeight + 'px'
+		target.appendChild(xaxis)
+		target.appendChild(yaxis)
+		_xaxis = xaxis;
+		_yaxis = yaxis;
+
+
+		var xaxis = document.getElementById('board-xaxis'),
+			yaxis = document.getElementById('board-yaxis');
+		target.onmouseenter = function (e) {
+			xaxis.style.transform = 'translateY('+ e.offsetY +'px)'
+			yaxis.style.transform = 'translateX('+ e.offsetX +'px)'
+			target.onmousemove = function (e) {
+				xaxis.style.transform = 'translateY('+ e.offsetY +'px)'
+				yaxis.style.transform = 'translateX('+ e.offsetX +'px)'				
+			}
+		}
 	}
 	function renderLabels(target) {
 		var labels = document.createElement('ul');
@@ -199,6 +231,8 @@ var Labelimg = (function () {
 		// 并且以后的坐标都会乘以这个系数，否则绘制的坐标是错误的
 		_self.kx = _self.imgWidth / img.clientWidth
 		_self.ky = _self.imgHeight / img.clientHeight
+		_xaxis.style.width = img.clientWidth + 'px'
+		_yaxis.style.height = img.clientHeight + 'px'
 
 	}
 	function shrinkImg(img, svg) {
@@ -207,6 +241,9 @@ var Labelimg = (function () {
 		svg.style.height = img.clientHeight + 'px';
 		_self.kx = _self.imgWidth / img.clientWidth
 		_self.ky = _self.imgHeight / img.clientHeight
+
+		_xaxis.style.width = img.clientWidth + 'px'
+		_yaxis.style.height = img.clientHeight + 'px'
 
 	}
 	function repeal() {
@@ -299,11 +336,16 @@ var Labelimg = (function () {
 				rect.setAttribute('width', width)
 				rect.setAttribute('height', height)
 			}
-			parent.onmouseup = function () {
+			parent.onmouseup = function (e) {
+				var x = e.offsetX * _self.kx,
+			 		y = e.offsetY * _self.ky;
 				parent.onmousemove = null
 				rect.setAttribute('data-position', `[[${x},${y}], [${x + width},${y}], [${x+width},${y+height}], [${x},${y+height}]]`)
 				rect.setAttribute('data-index', parent.children.length)
-
+			 	if(Math.abs(x - _self.x) === 0 && Math.abs(y - _self.y) === 0) {
+					parent.removeChild(rect)
+					return ;
+			 	}
 				createLabelsItem(parent.children.length)
 			}
 		}
