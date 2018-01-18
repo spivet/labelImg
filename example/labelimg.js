@@ -89,6 +89,7 @@ var Labelimg = (function () {
 		// renderBoard(target)
 		// renderLabels(target)
 		// renderTip(target)
+		render.setAxis(document.querySelector('.lbi-paint-box'))
 	}
 	// 整体UI框架的 html 结构
 	render.ui = function () {
@@ -141,14 +142,14 @@ var Labelimg = (function () {
 	}
 	// 设置辅助轴
 	render.setAxis = function (target) {
-		var xaxis = document.getElementById('board-xaxis'),
-			yaxis = document.getElementById('board-yaxis');
+		var xaxis = document.querySelector('.lbi-xaxis'),
+			yaxis = document.querySelector('.lbi-yaxis');
 		target.onmouseenter = function (e) {
-			xaxis.style.transform = 'translateY('+ e.offsetY +'px)'
-			yaxis.style.transform = 'translateX('+ e.offsetX +'px)'
+			xaxis.style.top = e.offsetY +'px'
+			yaxis.style.left = e.offsetX +'px'
 			target.onmousemove = function (e) {
-				xaxis.style.transform = 'translateY('+ e.offsetY +'px)'
-				yaxis.style.transform = 'translateX('+ e.offsetX +'px)'				
+				xaxis.style.top = e.offsetY +'px'
+				yaxis.style.left = e.offsetX +'px'			
 			}
 		}
 	}
@@ -171,6 +172,7 @@ var Labelimg = (function () {
 		tip.className = 'paint-tip';
 		target.appendChild(tip)
 	}
+
 	// toobar 里每个按钮被点击后所执行的操作
 	// 在 renderToolbar() 函数的末尾调用，当 toobar 渲染完毕后执行
 	function tool() {
@@ -184,23 +186,6 @@ var Labelimg = (function () {
 			if(target.tagName.toLowerCase() === 'span') {
 				var action = target.dataset.action;
 				tool[action](img, svg)
-				// switch (target.dataset.name) {
-				// 	case 'magnify':
-				// 		magnifyImg(img, svg)
-				// 		break;
-				// 	case 'shrink':
-				// 		shrinkImg(img, svg)
-				// 		break;
-				// 	case 'repeal':
-				// 		repeal()
-				// 		break;
-				// 	case 'clean':
-				// 		clean()
-				// 		break;
-				// 	default:
-				// 		// statements_def
-				// 		break;
-				// }
 			}
 		})
 	}
@@ -216,17 +201,13 @@ var Labelimg = (function () {
 	}
 	tool.magnify = function (img, svg) {
 		img.style.width = img.clientWidth + 100 + 'px';
-		svg.style.width = img.clientWidth + 'px';
-		svg.style.height = img.clientHeight + 'px';
-
+		// svg 与标注图同步大小
 		syncSize(img)
 
 	}
 	tool.shrink = function (img, svg) {
 		img.style.width = img.clientWidth - 100 + 'px';
-		svg.style.width = img.clientWidth + 'px';
-		svg.style.height = img.clientHeight + 'px';
-
+		// svg 与标注图同步大小
 		syncSize(img)
 	}
 	tool.repeal = function () {
@@ -254,9 +235,11 @@ var Labelimg = (function () {
 		_self.polygonConfig.stack = [];
 	}
 	// 同步标注图片和 svg 大小，使两者保持一致
-	function syncSize(img) {
+	function syncSize(img,svg) {
 		// svg 跟随图片一起缩放时，需要计算出 svg 缩放前后的宽高比例系数
 		// 并且以后的坐标都会乘以这个系数，否则绘制的坐标是错误的
+		svg.style.width = img.clientWidth + 'px';
+		svg.style.height = img.clientHeight + 'px';
 		_self.kx = _self.imgWidth / img.clientWidth
 		_self.ky = _self.imgHeight / img.clientHeight
 	}
