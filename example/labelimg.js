@@ -3,7 +3,7 @@ var Labelimg = (function () {
 	var _xaxis, _yaxis;
 
 	function Labelimg(opt) {
-		this.boardWrap = opt.el;
+		this.el = opt.el;
 		this.shape = opt.shape || 'polygon';
 
 		this.x = 0;
@@ -24,49 +24,44 @@ var Labelimg = (function () {
 		this.outputData = []
 		_self = this;
 
-		this.TOOL = [
-			// { NAME: 'point', ICON: '\u25CF', TITLE: '点', isShape: true },
-			// { NAME: 'line', ICON: '\u2572', TITLE: '线', isShape: true },
-			// { NAME: 'circle', ICON: '\u25EF', TITLE: '圆', isShape: true },
-			// { NAME: 'rect', ICON: '\u25AD', TITLE: '矩形', isShape: true },
-			// { NAME: 'polygon', ICON: '\u2606', TITLE: '多边形', isShape: true },
-			{ NAME: 'color', ICON: '', TITLE: '颜色' },
+		this.TOOLS = [
 			{ NAME: 'magnify', ICON: '\u29FE', TITLE: '放大' },
 			{ NAME: 'shrink', ICON: '\u29FF', TITLE: '缩小' },
 			{ NAME: 'repeal', ICON: '\u23F4', TITLE: '撤销' },
 			{ NAME: 'clean', ICON: '\u27F3', TITLE: '清空' }
 		]
-		renderUI(this.boardWrap, this.TOOL)
-		draw.call(this)
+		this.COLORS = ['#ff0000', '#00db00', '#f9f900', '#0072e3']
+		render.call(this)
+		// draw.call(this)
 	}
 
 	Labelimg.prototype = {
 		addImg: function (src) {
-			var img = document.getElementById('board-img');
-			if (!img) {
-				img = document.createElement('img');
-				img.id = 'board-img';
-			}
-			img.src = src;
-			var _svg = document.getElementById('board-svg');
-			_svg.parentNode.appendChild(img);
-			img.onload = function () {
-				_svg.style.width = img.clientWidth + 'px';
-				_svg.style.height = img.clientHeight + 'px';
-				_svg.setAttribute('viewBox', `0, 0, ${img.clientWidth}, ${img.clientHeight}`)
-				// 保存图片原始尺寸，当图片放大或缩小后，需要与原始尺寸对比，计算比例系数
-				_self.imgWidth = img.clientWidth;
-				_self.imgHeight = img.clientHeight;
+			// var img = document.getElementById('lbi-img');
+			// if (!img) {
+			// 	img = document.createElement('img');
+			// 	img.id = 'lbi-img';
+			// }
+			// img.src = src;
+			// var _svg = document.getElementById('lbi-svg');
+			// _svg.parentNode.appendChild(img);
+			// img.onload = function () {
+			// 	_svg.style.width = img.clientWidth + 'px';
+			// 	_svg.style.height = img.clientHeight + 'px';
+			// 	_svg.setAttribute('viewBox', `0, 0, ${img.clientWidth}, ${img.clientHeight}`)
+			// 	// 保存图片原始尺寸，当图片放大或缩小后，需要与原始尺寸对比，计算比例系数
+			// 	_self.imgWidth = img.clientWidth;
+			// 	_self.imgHeight = img.clientHeight;
 
-				_self.kx = 1;
-				_self.ky = 1;
-				var board = document.getElementsByClassName('paint-board')[0]
-				renderAxis(board)
-			}
-			clean(_svg)
+			// 	_self.kx = 1;
+			// 	_self.ky = 1;
+			// 	var board = document.getElementsByClassName('lbi-svg-box')[0]
+			// 	renderAxis(board)
+			// }
+			// clean(_svg)
 		},
 		output: function () {
-			var _svg = document.getElementById('board-svg');
+			var _svg = document.getElementById('lbi-svg');
 			var outputData = []
 			Array.prototype.forEach.call(_svg.children, function (item, index) {
 				var dataItem = {};
@@ -78,86 +73,74 @@ var Labelimg = (function () {
 		}
 	}
 
-	function renderUI(target, tools) {
-		renderToolbar(target, tools)
-		renderBoard(target)
-		renderLabels(target)
-		renderTip(target)
-	}
-	function renderToolbar(target, tools) {
-		var toolbar = document.createElement('div');
-		toolbar.className = 'paint-toolbar';
+	function render() {
+		// 获取 整体 UI 框架的 html 结构字符串并渲染
+		this.el.innerHTML = render.ui();
+		
+		// 获取 toolbox 的 html 结构字符串并渲染
+		document.querySelector('.lbi-tool-box').innerHTML = render.toolBox(this.TOOLS);
+		tool()
 
-		var toolbarHtml = '';
-		tools.forEach(function (tool) {
-			if (tool.NAME === 'color') {
-				toolbarHtml += `
-					<div class="toolbar-item toolbar-item-color" title="${tool.TITLE}" data-name="${tool.NAME}" style="background-color:#ff0000">
-						<div class="color-box">
-							<span data-color="#ff0000" style="background-color:#ff0000"></span>
-							<span data-color="#00db00" style="background-color:#00db00"></span>
-							<span data-color="#f9f900" style="background-color:#f9f900"></span>
-							<span data-color="#0072e3" style="background-color:#0072e3"></span>
-						</div>
+		// 获取 svgbox 的 html 结构字符串并渲染
+		// 
+		// colorBox
+		document.querySelector('.lbi-color-box').innerHTML = render.colorBox(this.COLORS);
+		// renderToolbar(target, tools)
+		// renderBoard(target)
+		// renderLabels(target)
+		// renderTip(target)
+	}
+	// 整体UI框架的 html 结构
+	render.ui = function () {
+		var uiHtml = `
+			<div class="lbi-main">
+				<div class="lbi-tool-box"></div>
+				<div class="lbi-paint-box">
+					<div class="lbi-svg-box">
+						<img src="http://42.202.149.224:8080/static/images/imgPeople/1.jpg" alt="" class="lbi-img" />
+						<svg class="lbi-svg"></svg>
 					</div>
-				`
-			} else {
-				toolbarHtml += `
-					<span class="toolbar-item" title="${tool.TITLE}" data-name="${tool.NAME}">
-						${tool.ICON}
-					</span>
-				`
-			}
+					<div class="lbi-xaxis"></div>
+					<div class="lbi-yaxis"></div>
+				</div>
+			</div>
+			<div class="lbi-side">
+				<p class="lbi-side-tt">颜色选择</p>
+				<div class="lbi-color-box"></div>
+				<p class="lbi-side-tt">标注方式</p>
+				<div class="lbi-way-box">
+					<button class="lbi-way-btn" type="button">打点</button>
+					<button class="lbi-way-btn" type="button">画框</button>
+					<button class="lbi-way-btn" type="button">描边</button>
+				</div>
+			</div>
+		`;
+		return uiHtml;
+	}
+	// 工具栏 toolBox 内的 html 结构
+	render.toolBox = function (tools) {
+		var toolboxHtml = '';
+		tools.forEach(function (tool) {
+			toolboxHtml += `
+				<span class="lbi-tool" title="${tool.TITLE}" data-action="${tool.NAME}">
+					${tool.ICON}
+				</span>
+			`
 		})
-		toolbar.innerHTML = toolbarHtml;
-		target.appendChild(toolbar)
-
-		toolEvent()
+		return toolboxHtml;
 	}
-	function renderBoard(target) {
-		var board = document.createElement('div');
-		board.className = 'paint-board';
-		target.appendChild(board)
-		// TODO 添加svg优化，是否要用 appendChild()
-		renderSvg(board)
-	}
-	function renderSvg(parent) {
-		var svg = '<svg id="board-svg"></svg>';
-		parent.innerHTML = svg;
-		var _svg = document.getElementById('board-svg')
+	// 设置 svg
+	render.setSvg = function (parent) {
+		var _svg = document.getElementById('lbi-svg')
 		_svg.style.width = parent.clientWidth + 'px';
 		_svg.style.height = parent.clientHeight + 'px';
 		_svg.addEventListener('mouseover', function (e) {
-			if(e.target.nodeType === 1 && e.target.tagName !== 'svg') {
-				var index = e.target.dataset.index || '',
-					name = e.target.dataset.name || '';
-				var tip = document.getElementsByClassName('paint-tip')[0];
-				tip.textContent = index + ' ' + name
-				tip.style.display = 'block'
-				tip.style.left = e.offsetX + 50 + 'px'
-				tip.style.top = e.offsetY - 50 + 'px'
-			}
 		})
 		_svg.addEventListener('mouseout', function () {
-			var tip = document.getElementsByClassName('paint-tip')[0];
-			tip.style.display = 'none'
 		})
 	}
-	function renderAxis(target) {
-		var xaxis = document.createElement('div'),
-			yaxis = document.createElement('div');
-		xaxis.id = 'board-xaxis'
-		xaxis.style.width = _self.imgWidth + 'px'
-		xaxis.style.height = '2px'
-		yaxis.id = 'board-yaxis'
-		yaxis.style.width = '2px'
-		yaxis.style.height = _self.imgHeight + 'px'
-		target.appendChild(xaxis)
-		target.appendChild(yaxis)
-		_xaxis = xaxis;
-		_yaxis = yaxis;
-
-
+	// 设置辅助轴
+	render.setAxis = function (target) {
 		var xaxis = document.getElementById('board-xaxis'),
 			yaxis = document.getElementById('board-yaxis');
 		target.onmouseenter = function (e) {
@@ -169,6 +152,15 @@ var Labelimg = (function () {
 			}
 		}
 	}
+	// 渲染颜色选择内容
+	render.colorBox = function (colors) {
+		var colorHtml = '';
+		colors.forEach(function (color) {
+			colorHtml += `<span class="lbi-color-item" data-color="${color}" style="border-color: ${color};"></span>`
+		})
+		return colorHtml;
+	}
+	// 设置颜色选择操作
 	function renderLabels(target) {
 		var labels = document.createElement('ul');
 		labels.className = 'paint-labels';
@@ -181,38 +173,38 @@ var Labelimg = (function () {
 	}
 	// toobar 里每个按钮被点击后所执行的操作
 	// 在 renderToolbar() 函数的末尾调用，当 toobar 渲染完毕后执行
-	function toolEvent() {
-		var _toolItems = document.getElementsByClassName('toolbar-item');
-		var _toolbar = document.getElementsByClassName('paint-toolbar')[0];
-
-						changeColor()
-		_toolbar.addEventListener('click', function (e) {
+	function tool() {
+						// changeColor()
+		var toolbox = document.querySelector('.lbi-tool-box');
+		toolbox.addEventListener('click', function (e) {
 			var target = e.target;
 			// 由于渲染顺序的原因，暂时需要在点击 toolbar 里的按钮时获取 svg 和 img
-			var _svg = document.getElementById('board-svg'),
-				_img = document.getElementById('board-img');
+			var svg = document.querySelector('.lbi-svg'),
+				img = document.querySelector('.lbi-img');
 			if(target.tagName.toLowerCase() === 'span') {
-				switch (target.dataset.name) {
-					case 'magnify':
-						magnifyImg(_img, _svg)
-						break;
-					case 'shrink':
-						shrinkImg(_img, _svg)
-						break;
-					case 'repeal':
-						repeal()
-						break;
-					case 'clean':
-						clean()
-						break;
-					default:
-						// statements_def
-						break;
-				}
+				var action = target.dataset.action;
+				tool[action](img, svg)
+				// switch (target.dataset.name) {
+				// 	case 'magnify':
+				// 		magnifyImg(img, svg)
+				// 		break;
+				// 	case 'shrink':
+				// 		shrinkImg(img, svg)
+				// 		break;
+				// 	case 'repeal':
+				// 		repeal()
+				// 		break;
+				// 	case 'clean':
+				// 		clean()
+				// 		break;
+				// 	default:
+				// 		// statements_def
+				// 		break;
+				// }
 			}
 		})
 	}
-	function changeColor() {
+	tool.changeColor = function () {
 		var colorBox = document.getElementsByClassName('color-box')[0];
 		var colors = colorBox.children;
 		for(let i = 0; i < colors.length; i++) {
@@ -222,32 +214,23 @@ var Labelimg = (function () {
 			}
 		}
 	}
-	function magnifyImg(img, svg) {
+	tool.magnify = function (img, svg) {
 		img.style.width = img.clientWidth + 100 + 'px';
 		svg.style.width = img.clientWidth + 'px';
 		svg.style.height = img.clientHeight + 'px';
 
-		// svg 跟随图片一起缩放时，需要计算出 svg 缩放前后的宽高比例系数
-		// 并且以后的坐标都会乘以这个系数，否则绘制的坐标是错误的
-		_self.kx = _self.imgWidth / img.clientWidth
-		_self.ky = _self.imgHeight / img.clientHeight
-		_xaxis.style.width = img.clientWidth + 'px'
-		_yaxis.style.height = img.clientHeight + 'px'
+		syncSize(img)
 
 	}
-	function shrinkImg(img, svg) {
+	tool.shrink = function (img, svg) {
 		img.style.width = img.clientWidth - 100 + 'px';
 		svg.style.width = img.clientWidth + 'px';
 		svg.style.height = img.clientHeight + 'px';
-		_self.kx = _self.imgWidth / img.clientWidth
-		_self.ky = _self.imgHeight / img.clientHeight
 
-		_xaxis.style.width = img.clientWidth + 'px'
-		_yaxis.style.height = img.clientHeight + 'px'
-
+		syncSize(img)
 	}
-	function repeal() {
-		var _svg = document.getElementById('board-svg');
+	tool.repeal = function () {
+		var _svg = document.getElementById('lbi-svg');
 		var _labels = document.getElementsByClassName('paint-labels')[0];
 		if (_self.polygonConfig.stack.length > 0) {
 			_svg.removeChild(_self.polygonConfig.stack[_self.polygonConfig.stack.length - 1])
@@ -262,18 +245,25 @@ var Labelimg = (function () {
 			_labels.removeChild(_labels.lastChild)
 		}
 	}
-	function clean() {
-		var _svg = document.getElementById('board-svg');
+	tool.clean = function () {
+		var _svg = document.getElementById('lbi-svg');
 		var _labels = document.getElementsByClassName('paint-labels')[0];
 		_labels.innerHTML = ''
 		_svg.innerHTML = ''
 		_self.polygonConfig.points = []
 		_self.polygonConfig.stack = [];
 	}
+	// 同步标注图片和 svg 大小，使两者保持一致
+	function syncSize(img) {
+		// svg 跟随图片一起缩放时，需要计算出 svg 缩放前后的宽高比例系数
+		// 并且以后的坐标都会乘以这个系数，否则绘制的坐标是错误的
+		_self.kx = _self.imgWidth / img.clientWidth
+		_self.ky = _self.imgHeight / img.clientHeight
+	}
 	// 绘制图形的方法
 	function draw() {
 		var that = this;
-		var _svg = document.getElementById('board-svg');
+		var _svg = document.getElementById('lbi-svg');
 
 		switch (_self.shape) {
 			case 'point':
@@ -452,7 +442,7 @@ var Labelimg = (function () {
 
 		var input = item.getElementsByTagName('input')[0]
 		input.onchange = function (e) {
-			var _svg = document.getElementById('board-svg');
+			var _svg = document.getElementById('lbi-svg');
 			_svg.children[index-1].setAttribute('data-name', input.value)
 		}
 	}

@@ -85,10 +85,113 @@ polygon:hover {
     opacity: .6 !important;
 }
 
-#board-xaxis,
-#board-yaxis {
+.lbi-main {
+    box-sizing: border-box;
+    float: left;
+    width: 920px;
+    padding: 25px;
+    margin-right: 20px;
+    border-radius: 5px;
+    background-color: #fff;
+}
+.lbi-tool-box {
+    display: flex;
+    float: right;
+    margin-bottom: 20px;
+}
+.lbi-tool {
+    padding: 5px 10px;
+    background-color: #f2f2f2;
+    color: #666;
+    text-align: center;
+    cursor: pointer;
+}
+.lbi-tool:hover {
+    background-color: #ccc;
+}
+.lbi-paint-box {
+    position: relative;
+    height: 500px;
+    border: 1px solid #eee;
+    clear: both;
+}
+.lbi-svg-box {
+    height: 500px;
+    overflow: auto;
+}
+.lbi-svg-box::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+}
+
+.lbi-svg-box::-webkit-scrollbar-track {
+    background: #E6E6E6;
+    border-radius: 2px;
+}
+
+.lbi-svg-box::-webkit-scrollbar-thumb {
+    background: #747474;
+    border-radius: 2px;
+}
+
+.lbi-svg-box::-webkit-scrollbar-corner {
+    background: #E6E6E6;
+}
+.lbi-svg {
+    width: 100%;
+    height: 500px;
+}
+.lbi-xaxis {
     position: absolute;
-    background-color: #000;
+    left: 0;
+    right: 4px;
+    height: 2px;
+    background-color: #1c79c6;
+}
+.lbi-yaxis {
+    position: absolute;
+    position: absolute;
+    top: 0;
+    bottom: 4px;
+    width: 2px;
+    background-color: #1c79c6;
+}
+
+.lbi-side {
+    box-sizing: border-box;
+    float: left;
+    width: 260px;
+    padding: 25px;
+    border-radius: 5px;
+    background-color: #fff;
+}
+.lbi-side-tt {
+    font-size: 14px;
+    color: #333;
+}
+.lbi-color-box {
+    display: flex;
+    margin: 10px 0 20px;
+    justify-content: space-between;
+}
+.lbi-color-item {
+    width: 15px;
+    height: 15px;
+    border: 2px solid;
+    border-radius: 50%;
+    cursor: pointer;
+}
+.lbi-way-box {
+    display: flex;
+    margin-top: 10px;
+    justify-content: space-between;
+}
+.lbi-way-btn {
+    width: 50px;
+    line-height: 30px;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    cursor: pointer;
 }
 
 .paint-labels {
