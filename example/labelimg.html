@@ -9,17 +9,17 @@
 		body {
 			height: 100vh;
 			background-color: #eee;
+			user-select: none;
 		}
 		#canva {
 			width: 1200px;
-			height: 600px;
 			margin: 0 auto;
 			overflow: hidden;
 		}
 	</style>
 	<link rel="stylesheet" href="labelimg.css">
 </head>
-<body>
+<body unselectable="on">
 	<div id="canva"></div>
 	<div>
 		<button id="next" type="button">下一题</button>	

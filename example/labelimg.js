@@ -13,7 +13,7 @@ var Labelimg = (function () {
 		this.imgWidth = 0;
 		this.imgHeight = 0;
 
-		this.color = '#ff0000';
+		this.color_active = '#ff0000'; // 当前标注所使用的颜色
 		this.polygonConfig = {
 			points: [],
 			stack: []
@@ -32,33 +32,31 @@ var Labelimg = (function () {
 		]
 		this.COLORS = ['#ff0000', '#00db00', '#f9f900', '#0072e3']
 		render.call(this)
-		// draw.call(this)
+		draw.call(this)
 	}
 
 	Labelimg.prototype = {
 		addImg: function (src) {
-			// var img = document.getElementById('lbi-img');
-			// if (!img) {
-			// 	img = document.createElement('img');
-			// 	img.id = 'lbi-img';
-			// }
-			// img.src = src;
-			// var _svg = document.getElementById('lbi-svg');
-			// _svg.parentNode.appendChild(img);
-			// img.onload = function () {
-			// 	_svg.style.width = img.clientWidth + 'px';
-			// 	_svg.style.height = img.clientHeight + 'px';
-			// 	_svg.setAttribute('viewBox', `0, 0, ${img.clientWidth}, ${img.clientHeight}`)
-			// 	// 保存图片原始尺寸，当图片放大或缩小后，需要与原始尺寸对比，计算比例系数
-			// 	_self.imgWidth = img.clientWidth;
-			// 	_self.imgHeight = img.clientHeight;
+			var img = document.querySelector('.lbi-img');
+			if (!img) {
+				img = document.createElement('img');
+				img.className = 'lbi-img';
+			}
+			img.src = src;
+			img.onload = function () {
+				var svg = document.querySelector('.lbi-svg');
+				// 保存图片原始尺寸，当图片放大或缩小后，需要与原始尺寸对比，计算比例系数
+				_self.imgWidth = img.clientWidth;
+				_self.imgHeight = img.clientHeight;
+				svg.setAttribute('viewBox', '0, 0, ' + _self.imgWidth + ', ' + _self.imgHeight);
 
-			// 	_self.kx = 1;
-			// 	_self.ky = 1;
-			// 	var board = document.getElementsByClassName('lbi-svg-box')[0]
-			// 	renderAxis(board)
-			// }
-			// clean(_svg)
+				// 初始化图片大小，让图片和父元素一样宽，提高体验
+				img.style.width = img.clientWidth > img.parentNode.clientWidth ? 
+					img.parentNode.clientWidth + 'px' :
+					img.clientWidth + 'px';
+				syncSize(img,svg)
+			}
+			// clean(svg)
 		},
 		output: function () {
 			var _svg = document.getElementById('lbi-svg');
@@ -85,11 +83,12 @@ var Labelimg = (function () {
 		// 
 		// colorBox
 		document.querySelector('.lbi-color-box').innerHTML = render.colorBox(this.COLORS);
+		render.handleColor()
 		// renderToolbar(target, tools)
 		// renderBoard(target)
 		// renderLabels(target)
 		// renderTip(target)
-		render.setAxis(document.querySelector('.lbi-paint-box'))
+		// render.axisSetting(document.querySelector('.lbi-paint-box'))
 	}
 	// 整体UI框架的 html 结构
 	render.ui = function () {
@@ -98,21 +97,39 @@ var Labelimg = (function () {
 				<div class="lbi-tool-box"></div>
 				<div class="lbi-paint-box">
 					<div class="lbi-svg-box">
-						<img src="http://42.202.149.224:8080/static/images/imgPeople/1.jpg" alt="" class="lbi-img" />
+						<img src="" alt="" class="lbi-img" />
 						<svg class="lbi-svg"></svg>
 					</div>
 					<div class="lbi-xaxis"></div>
 					<div class="lbi-yaxis"></div>
 				</div>
+				<div class="lbi-select-box">
+					<p class="lbi-side-tt">标注对象</p>
+					<label class="lbi-select-label">
+						名称：
+						<select name="" id="" class="lbi-select"></select>
+					</label>
+					<label class="lbi-select-label">
+						属性：
+						<select name="" id="" class="lbi-select"></select>
+					</label>
+					<button class="lbi-select-btn" type="button">确认</button>
+				</div>
 			</div>
 			<div class="lbi-side">
-				<p class="lbi-side-tt">颜色选择</p>
-				<div class="lbi-color-box"></div>
-				<p class="lbi-side-tt">标注方式</p>
-				<div class="lbi-way-box">
-					<button class="lbi-way-btn" type="button">打点</button>
-					<button class="lbi-way-btn" type="button">画框</button>
-					<button class="lbi-way-btn" type="button">描边</button>
+				<div class="lbi-side-item">
+					<p class="lbi-side-tt">颜色选择</p>
+					<div class="lbi-color-box"></div>
+					<p class="lbi-side-tt">标注方式</p>
+					<div class="lbi-shape-box">
+						<button class="lbi-shape-btn" type="button" data-shape="point">打点</button>
+						<button class="lbi-shape-btn" type="button" data-shape="rect">画框</button>
+						<button class="lbi-shape-btn" type="button" data-shape="polygon">描边</button>
+					</div>
+				</div>
+				<div class="lbi-side-item">
+					<p class="lbi-side-tt">标注属性</p>
+					<div class="lbi-info-box"></div>
 				</div>
 			</div>
 		`;
@@ -130,8 +147,39 @@ var Labelimg = (function () {
 		})
 		return toolboxHtml;
 	}
+	// 渲染颜色选择内容
+	render.colorBox = function (colors) {
+		var colorHtml = '';
+		colors.forEach(function (color) {
+			colorHtml += `<span class="lbi-color-item" data-color="${color}" style="border-color: ${color};"></span>`
+		})
+		return colorHtml;
+	}
+	// 设置颜色选择操作
+	render.handleColor = function () {
+		var colors = document.querySelectorAll('.lbi-color-item');
+		for(let i = 0; i < colors.length; i++) {
+			colors[i].onclick = function (e) {
+				_self.color_active = colors[i].style.backgroundColor = colors[i].dataset.color;
+				var siblings = Array.prototype.filter.call(colors, function (item, index) {
+					return item !== colors[i]
+				});
+				siblings.forEach(function (item) {
+					item.style.backgroundColor = '#fff'
+				})
+			}
+		}
+	}
+	render.handleShape = function () {
+		var shapes = document.querySelectorAll('.lbi-shape-btn');
+		for(let i = 0; i < shapes.length; i++) {
+			shapes[i].onclick = function (e) {
+				_self.shape = shapes[i].dataset.shape;
+			}
+		}
+	}
 	// 设置 svg
-	render.setSvg = function (parent) {
+	render.svgSetting = function (parent) {
 		var _svg = document.getElementById('lbi-svg')
 		_svg.style.width = parent.clientWidth + 'px';
 		_svg.style.height = parent.clientHeight + 'px';
@@ -141,7 +189,7 @@ var Labelimg = (function () {
 		})
 	}
 	// 设置辅助轴
-	render.setAxis = function (target) {
+	render.axisSetting = function (target) {
 		var xaxis = document.querySelector('.lbi-xaxis'),
 			yaxis = document.querySelector('.lbi-yaxis');
 		target.onmouseenter = function (e) {
@@ -153,15 +201,7 @@ var Labelimg = (function () {
 			}
 		}
 	}
-	// 渲染颜色选择内容
-	render.colorBox = function (colors) {
-		var colorHtml = '';
-		colors.forEach(function (color) {
-			colorHtml += `<span class="lbi-color-item" data-color="${color}" style="border-color: ${color};"></span>`
-		})
-		return colorHtml;
-	}
-	// 设置颜色选择操作
+
 	function renderLabels(target) {
 		var labels = document.createElement('ul');
 		labels.className = 'paint-labels';
@@ -176,7 +216,6 @@ var Labelimg = (function () {
 	// toobar 里每个按钮被点击后所执行的操作
 	// 在 renderToolbar() 函数的末尾调用，当 toobar 渲染完毕后执行
 	function tool() {
-						// changeColor()
 		var toolbox = document.querySelector('.lbi-tool-box');
 		toolbox.addEventListener('click', function (e) {
 			var target = e.target;
@@ -189,26 +228,16 @@ var Labelimg = (function () {
 			}
 		})
 	}
-	tool.changeColor = function () {
-		var colorBox = document.getElementsByClassName('color-box')[0];
-		var colors = colorBox.children;
-		for(let i = 0; i < colors.length; i++) {
-			colors[i].onclick = function (e) {
-				_self.color = colors[i].dataset.color;
-				colorBox.parentNode.style.backgroundColor = colors[i].dataset.color;
-			}
-		}
-	}
 	tool.magnify = function (img, svg) {
 		img.style.width = img.clientWidth + 100 + 'px';
 		// svg 与标注图同步大小
-		syncSize(img)
+		syncSize(img, svg)
 
 	}
 	tool.shrink = function (img, svg) {
 		img.style.width = img.clientWidth - 100 + 'px';
 		// svg 与标注图同步大小
-		syncSize(img)
+		syncSize(img, svg)
 	}
 	tool.repeal = function () {
 		var _svg = document.getElementById('lbi-svg');
@@ -243,20 +272,21 @@ var Labelimg = (function () {
 		_self.kx = _self.imgWidth / img.clientWidth
 		_self.ky = _self.imgHeight / img.clientHeight
 	}
+
+
 	// 绘制图形的方法
 	function draw() {
-		var that = this;
-		var _svg = document.getElementById('lbi-svg');
+		var svg = document.querySelector('.lbi-svg');
 
 		switch (_self.shape) {
 			case 'point':
-				drawPoint(_svg)
+				drawPoint(svg)
 				break;
 			case 'rect':
-				drawRect(_svg)
+				drawRect(svg)
 				break;
 			case 'polygon':
-				drawPolygon(_svg)
+				drawPolygon(svg)
 				break;
 			default:
 				// statements_def
@@ -273,7 +303,7 @@ var Labelimg = (function () {
 				'cy': _self.y,
 				'r': 2,
 				'stroke': 'yellow',
-				'fill': _self.color,
+				'fill': _self.color_active,
 				'data-index': parent.children.length,
 				'data-position': `[${_self.x}, ${_self.y}]`
 			};
@@ -294,7 +324,7 @@ var Labelimg = (function () {
 				y: _self.y,
 				width: 0,
 				height: 0,
-				stroke: _self.color,
+				stroke: _self.color_active,
 				style: 'fill:none;stroke-width:1'
 			}
 			var rect = createRect(attrs)
@@ -310,16 +340,20 @@ var Labelimg = (function () {
 				rect.setAttribute('height', height)
 			}
 			parent.onmouseup = function (e) {
-				var x = e.offsetX * _self.kx,
-			 		y = e.offsetY * _self.ky;
-				parent.onmousemove = null
-				rect.setAttribute('data-position', `[[${x},${y}], [${x + width},${y}], [${x+width},${y+height}], [${x},${y+height}]]`)
-				rect.setAttribute('data-index', parent.children.length)
-			 	if(Math.abs(x - _self.x) === 0 && Math.abs(y - _self.y) === 0) {
-					parent.removeChild(rect)
-					return ;
-			 	}
-				createLabelsItem(parent.children.length)
+				parent.onmousemove = null;
+				x = parseInt(x,10)
+				y = parseInt(y,10)
+				width = parseInt(width,10)
+				height = parseInt(height,10)
+
+				rect.setAttribute('data-position', '[[' + x + ',' + y + '], [' + (x + width) + ',' + y + '], [' + (x + width) + ',' + (y + height) + '], [' + x + ',' + (y + height) + ']]');
+				rect.setAttribute('data-index', parent.children.length);
+				if (_self.x === e.offsetX * _self.kx && _self.y === e.offsetY * _self.ky) {
+					parent.removeChild(rect);
+					return;
+				}
+
+				createLabelsItem(parent.children.length);
 			}
 		}
 	}
@@ -350,7 +384,7 @@ var Labelimg = (function () {
 						'cy': _self.y,
 						'r': 4,
 						'stroke': 'black',
-						'fill': _self.color
+						'fill': _self.color_active
 					};
 					var circle = createPoint(attrs)
 					this.appendChild(circle)
@@ -363,7 +397,7 @@ var Labelimg = (function () {
 						'y1': _self.polygonConfig.points[pointsLen - 2][1],
 						'x2': _self.polygonConfig.points[pointsLen - 1][0],
 						'y2': _self.polygonConfig.points[pointsLen - 1][1],
-						'stroke': _self.color,
+						'stroke': _self.color_active,
 						'style': 'stroke-width:1'
 					}
 					var line = createLine(attrs)
@@ -404,13 +438,15 @@ var Labelimg = (function () {
 	function createPolygon(points) {
 		var opt = {
 			points: points,
-			fill: _self.color,
+			fill: _self.color_active,
 			style: 'stroke:purple;stroke-width:1;opacity:.3'
 		};
 		var polygon = makeElementNS('polygon', opt)
 
 		return polygon;
 	}
+
+	// 创建标注对象属性
 	function createLabelsItem(index) {
 		var item = document.createElement('li');
 		item.className = 'labels-item';
@@ -442,6 +478,6 @@ var Labelimg = (function () {
 		}
 
 		return ele;
-	} 
+	}
 	return Labelimg;
 })()
