@@ -167,6 +167,7 @@ polygon:hover {
     top: 0;
     right: 0;
     bottom: 0;
+    display: none;
     background-color: rgba(0,0,0,0.2);
 }
 .lbi-select-box {
@@ -245,12 +246,26 @@ polygon:hover {
     color: #333;
     cursor: pointer;
 }
+.lbi-info-box {
+    /*margin-top: 10px;*/
+}
+.lbi-info-item {
+    line-height: 20px;
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    font-size: 14px;
+    color: #333;
+}
+.lbi-info-item:hover {
+    background-color: #eee;
+}
 
 .paint-labels {
 	position: absolute;
 	right: 70px;
 	list-style: none;
 }
+
 
 .labels-item {
 
