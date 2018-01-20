@@ -52,17 +52,17 @@ var Labelimg = (function () {
 			img.onload = function () {
 				var svg = document.querySelector('.lbi-svg');
 				// 保存图片原始尺寸，当图片放大或缩小后，需要与原始尺寸对比，计算比例系数
-				_self.imgWidth = img.clientWidth;
+				_self.imgWidth = img.naturalWidth;
 				_self.imgHeight = img.clientHeight;
 				svg.setAttribute('viewBox', '0, 0, ' + _self.imgWidth + ', ' + _self.imgHeight);
 
 				// 初始化图片大小，让图片和父元素一样宽，提高体验
-				img.style.width = img.clientWidth > img.parentNode.clientWidth ? 
+				img.style.width = img.naturalWidth > img.parentNode.clientWidth ? 
 					img.parentNode.clientWidth + 'px' :
-					img.clientWidth + 'px';
+					img.naturalWidth + 'px';
 				syncSize(img,svg)
+				tool.clean()
 			}
-			// clean(svg)
 		},
 		output: function () {
 			var _svg = document.getElementById('lbi-svg');
@@ -338,6 +338,7 @@ var Labelimg = (function () {
 		svg.innerHTML = ''
 		_self.polygonConfig.points = []
 		_self.polygonConfig.stack = [];
+		document.querySelector('.lbi-mask').style.display = 'none'
 	}
 	// 同步标注图片和 svg 大小，使两者保持一致
 	function syncSize(img,svg) {
@@ -494,10 +495,10 @@ var Labelimg = (function () {
 	function createPoint(attrs) {
 		var circle = makeElementNS('circle', attrs)
 		circle.addEventListener('mouseover', function (e) {
-			e.target.setAttribute('r', 10)
+			e.target.style.strokeWidth = 10
 		})
 		circle.addEventListener('mouseout', function (e) {
-			e.target.setAttribute('r', attrs.r)
+			e.target.style.strokeWidth = 1
 		})
 			
 		return circle;
