@@ -103,17 +103,23 @@ var Labelimg = (function () {
 					<div class="lbi-xaxis"></div>
 					<div class="lbi-yaxis"></div>
 				</div>
-				<div class="lbi-select-box">
-					<p class="lbi-side-tt">标注对象</p>
-					<label class="lbi-select-label">
-						名称：
-						<select name="" id="" class="lbi-select"></select>
-					</label>
-					<label class="lbi-select-label">
-						属性：
-						<select name="" id="" class="lbi-select"></select>
-					</label>
-					<button class="lbi-select-btn" type="button">确认</button>
+				<div class="lbi-mask">
+					<div class="lbi-select-box">
+						<p class="lbi-side-tt">标注对象</p>
+						<label class="lbi-select-label">
+							名称：
+							<select name="" id="" class="lbi-select">
+								<option value="">-- 请选择 --</option>
+							</select>
+						</label>
+						<label class="lbi-select-label">
+							属性：
+							<select name="" id="" class="lbi-select">
+								<option value="">-- 请选择 --</option>
+							</select>
+						</label>
+						<button class="lbi-select-btn" type="button">确认</button>
+					</div>
 				</div>
 			</div>
 			<div class="lbi-side">

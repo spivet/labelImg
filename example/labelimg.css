@@ -161,6 +161,14 @@ polygon:hover {
     width: 2px;
     background-color: #1c79c6;
 }
+.lbi-mask {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0,0,0,0.2);
+}
 .lbi-select-box {
     position: absolute;
     top: 50%;
@@ -178,7 +186,8 @@ polygon:hover {
     color: #333;
 }
 .lbi-select {
-    width: 100px;
+    width: 150px;
+    padding: 5px 0;
 }
 .lbi-select-btn {
     width: 100%;
