@@ -38,7 +38,7 @@ var Labelimg = (function () {
 		_self = this;
 
 		render.call(this)
-		draw.call(this)
+		draw()
 	}
 
 	Labelimg.prototype = {
@@ -53,7 +53,7 @@ var Labelimg = (function () {
 				var svg = document.querySelector('.lbi-svg');
 				// 保存图片原始尺寸，当图片放大或缩小后，需要与原始尺寸对比，计算比例系数
 				_self.imgWidth = img.naturalWidth;
-				_self.imgHeight = img.clientHeight;
+				_self.imgHeight = img.naturalHeight;
 				svg.setAttribute('viewBox', '0, 0, ' + _self.imgWidth + ', ' + _self.imgHeight);
 
 				// 初始化图片大小，让图片和父元素一样宽，提高体验
@@ -88,18 +88,18 @@ var Labelimg = (function () {
 		// colorBox
 		document.querySelector('.lbi-color-box').innerHTML = render.colorBox(this.COLORS);
 		render.handleColor()
+		render.handleShape()
 
 		// 获取 selectBox 的 html 结构字符串并渲染
 		var selectHtml = render.selectBox(this.labelObj);
 		document.getElementById('lbi-select-names').innerHTML = selectHtml.namesHtml;
 		document.getElementById('lbi-select-labels').innerHTML = selectHtml.labelsHtml;
-
 		render.handleSelect()
 		// renderToolbar(target, tools)
 		// renderBoard(target)
 		// renderLabels(target)
 		// renderTip(target)
-		// render.axisSetting(document.querySelector('.lbi-paint-box'))
+		render.axisSetting(document.querySelector('.lbi-paint-box'))
 	}
 	// 整体UI框架的 html 结构
 	render.ui = function () {
@@ -111,8 +111,10 @@ var Labelimg = (function () {
 						<img src="" alt="" class="lbi-img" />
 						<svg class="lbi-svg"></svg>
 					</div>
-					<div class="lbi-xaxis"></div>
-					<div class="lbi-yaxis"></div>
+					<svg class="lbi-axis">
+						<line x1="0" y1="0" x2="870" y2="0" style="stroke:#1c79c6;stroke-width:2" />
+						<line x1="0" y1="0" x2="0" y2="550" style="stroke:#1c79c6;stroke-width:2" />
+					</svg>
 				</div>
 				<div class="lbi-mask">
 					<div class="lbi-select-box">
@@ -251,6 +253,7 @@ var Labelimg = (function () {
 		for(let i = 0; i < shapes.length; i++) {
 			shapes[i].onclick = function (e) {
 				_self.shape = shapes[i].dataset.shape;
+				draw()
 			}
 		}
 	}
@@ -266,16 +269,18 @@ var Labelimg = (function () {
 	}
 	// 设置辅助轴
 	render.axisSetting = function (target) {
-		var xaxis = document.querySelector('.lbi-xaxis'),
-			yaxis = document.querySelector('.lbi-yaxis');
-		target.onmouseenter = function (e) {
-			xaxis.style.top = e.offsetY +'px'
-			yaxis.style.left = e.offsetX +'px'
+		var axis = document.querySelector('.lbi-axis'),
+			xaxis = axis.firstElementChild,
+			yaxis = axis.lastElementChild;
 			target.onmousemove = function (e) {
-				xaxis.style.top = e.offsetY +'px'
-				yaxis.style.left = e.offsetX +'px'			
+				xaxis.setAttribute('y1', e.offsetY)
+				xaxis.setAttribute('y2', e.offsetY)
+				yaxis.setAttribute('x1', e.offsetX)
+				yaxis.setAttribute('x2', e.offsetX)
+				// xaxis.style.top = e.offsetY +'px'
+				// yaxis.style.left = e.offsetX +'px'			
 			}
-		}
+		
 	}
 
 	function renderLabels(target) {
@@ -372,7 +377,8 @@ var Labelimg = (function () {
 		
 	}
 	function drawPoint(parent, attrs) {
-		parent.addEventListener('click', function (e){
+		parent.onmousedown = parent.onmousemove = parent.onmouseup = null
+		parent.onclick = function (e){
 			_self.x = e.offsetX * _self.kx;
 			_self.y = e.offsetY * _self.ky;
 			var attrs = {
@@ -387,12 +393,12 @@ var Labelimg = (function () {
 			var point = createPoint(attrs)
 			parent.appendChild(point)
 
-			// createLabelsItem(parent.children.length)
 			document.querySelector('.lbi-mask').style.display = 'block';
-		},false)
+		}
 
 	}
 	function drawRect(parent) {
+		parent.onclick = null
 		var x, y, width, height;
 		parent.onmousedown = function (e) {
 			_self.x = e.offsetX * _self.kx;
@@ -430,14 +436,14 @@ var Labelimg = (function () {
 					parent.removeChild(rect);
 					return;
 				}
-
-				createLabelsItem(parent.children.length);
+				document.querySelector('.lbi-mask').style.display = 'block';
 			}
 		}
 	}
 	function drawPolygon(parent) {
+		parent.onmousedown = parent.onmousemove = parent.onmouseup = null
 		// 绘制栈，保存起始点和每条线的 DOM 节点，当多边形绘制完毕后，需要删除之前的circle和line节点
-		parent.addEventListener('click', function (e) {
+		parent.onclick = function (e) {
 			if(e.target.tagName === 'circle') {
 				var points = _self.polygonConfig.points.join(' ')
 				var polygon = createPolygon(points)
@@ -447,7 +453,7 @@ var Labelimg = (function () {
 					parent.removeChild(item)
 				})
 				polygon.setAttribute('data-index', parent.children.length)
-				createLabelsItem(parent.children.length)
+				document.querySelector('.lbi-mask').style.display = 'block';
 				_self.polygonConfig.stack = []
 				_self.polygonConfig.points = []
 			} else {
@@ -483,7 +489,7 @@ var Labelimg = (function () {
 					_self.polygonConfig.stack.push(line)
 				}				
 			}
-		})
+		}
 	}
 
 	// 创建 svg 图形

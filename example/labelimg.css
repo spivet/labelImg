@@ -139,27 +139,20 @@ polygon:hover {
 .lbi-svg-box::-webkit-scrollbar-corner {
     background: #E6E6E6;
 }
+.lbi-axis {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 550px;
+}
 .lbi-svg {
     position: absolute;
     left: 0;
     top: 0;
+    z-index: 5;
 /*    width: 100%;
     height: 500px;*/
-}
-.lbi-xaxis {
-    position: absolute;
-    left: 0;
-    right: 4px;
-    height: 2px;
-    background-color: #1c79c6;
-}
-.lbi-yaxis {
-    position: absolute;
-    position: absolute;
-    top: 0;
-    bottom: 4px;
-    width: 2px;
-    background-color: #1c79c6;
 }
 .lbi-mask {
     position: absolute;
@@ -167,6 +160,7 @@ polygon:hover {
     top: 0;
     right: 0;
     bottom: 0;
+    z-index: 10;
     display: none;
     background-color: rgba(0,0,0,0.2);
 }
