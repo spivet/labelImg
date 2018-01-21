@@ -99,7 +99,7 @@ var Labelimg = (function () {
 		// renderBoard(target)
 		// renderLabels(target)
 		// renderTip(target)
-		render.axisSetting(document.querySelector('.lbi-paint-box'))
+		render.axisSetting(document.querySelector('.lbi-svg-box'))
 	}
 	// 整体UI框架的 html 结构
 	render.ui = function () {
@@ -273,10 +273,10 @@ var Labelimg = (function () {
 			xaxis = axis.firstElementChild,
 			yaxis = axis.lastElementChild;
 			target.onmousemove = function (e) {
-				xaxis.setAttribute('y1', e.offsetY)
-				xaxis.setAttribute('y2', e.offsetY)
-				yaxis.setAttribute('x1', e.offsetX)
-				yaxis.setAttribute('x2', e.offsetX)
+				xaxis.setAttribute('y1', e.offsetY - target.scrollTop)
+				xaxis.setAttribute('y2', e.offsetY - target.scrollTop)
+				yaxis.setAttribute('x1', e.offsetX - target.scrollLeft)
+				yaxis.setAttribute('x2', e.offsetX - target.scrollLeft)
 				// xaxis.style.top = e.offsetY +'px'
 				// yaxis.style.left = e.offsetX +'px'			
 			}
