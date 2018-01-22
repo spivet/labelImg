@@ -185,13 +185,19 @@ polygon:hover {
     padding: 5px 0;
 }
 .lbi-select-btn {
-    width: 100%;
-    padding: 6px 0;
-    border: 1px solid #46b8da;
+    padding: 6px 12px;
     border-radius: 4px;
-    background-color: #5bc0de;
     color: #fff;
     cursor: pointer;
+}
+.lbi-select-btn-submit {
+    border: 1px solid #46b8da;
+    background-color: #5bc0de;
+}
+.lbi-select-btn-close {
+    float: right;
+    border: 1px solid #eea236;
+    background-color: #f0ad4e;
 }
 
 

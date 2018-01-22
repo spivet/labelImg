@@ -118,7 +118,7 @@ var Labelimg = (function () {
 				</div>
 				<div class="lbi-mask">
 					<div class="lbi-select-box">
-						<p class="lbi-side-tt">标注对象</p>
+						<div class="lbi-side-tt">标注对象</div>
 						<label class="lbi-select-label">
 							名称：
 							<select name="" id="lbi-select-names" class="lbi-select"></select>
@@ -127,7 +127,8 @@ var Labelimg = (function () {
 							标签：
 							<select name="" id="lbi-select-labels" class="lbi-select"></select>
 						</label>
-						<button class="lbi-select-btn" type="button">确认</button>
+						<button class="lbi-select-btn lbi-select-btn-submit" type="button">确认</button>
+						<button class="lbi-select-btn lbi-select-btn-close" type="button">取消</button>
 					</div>
 				</div>
 			</div>
@@ -198,7 +199,8 @@ var Labelimg = (function () {
 	}
 	// 标注对象弹出框操作
 	render.handleSelect = function () {
-		var submit = document.querySelector('.lbi-select-btn');
+		// 点击确认按钮的操作
+		var submit = document.querySelector('.lbi-select-btn-submit');
 		submit.onclick = function () {
 			// 获取标注对象弹出层的值并渲染标注信息
 			var name = document.getElementById('lbi-select-names').value,
@@ -212,6 +214,17 @@ var Labelimg = (function () {
 			svg.children[len-1].setAttribute('data-name', name)
 			svg.children[len-1].setAttribute('data-label', label);
 			handleInfo()
+			// 还原标注对象弹出层并关闭
+			document.getElementById('lbi-select-names').value = '';
+			document.getElementById('lbi-select-labels').value = '';
+			document.querySelector('.lbi-mask').style.display = 'none';
+		}
+		// 点击取消按钮的操作
+		var close = document.querySelector('.lbi-select-btn-close');
+		close.onclick = function () {
+			var svg = document.querySelector('.lbi-svg');
+			svg.removeChild(svg.lastChild)
+
 			// 还原标注对象弹出层并关闭
 			document.getElementById('lbi-select-names').value = '';
 			document.getElementById('lbi-select-labels').value = '';
@@ -377,6 +390,7 @@ var Labelimg = (function () {
 		
 	}
 	function drawPoint(parent, attrs) {
+		// 在执行 drawPoint 函数之前，先把上个绘制函数事件删除，否则上个绘制函数也会一直执行
 		parent.onmousedown = parent.onmousemove = parent.onmouseup = null
 		parent.onclick = function (e){
 			_self.x = e.offsetX * _self.kx;
@@ -398,6 +412,7 @@ var Labelimg = (function () {
 
 	}
 	function drawRect(parent) {
+		// 在执行 drawRect 函数之前，先把上个绘制函数事件删除，否则上个绘制函数也会一直执行
 		parent.onclick = null
 		var x, y, width, height;
 		parent.onmousedown = function (e) {
@@ -423,8 +438,7 @@ var Labelimg = (function () {
 				rect.setAttribute('width', width)
 				rect.setAttribute('height', height)
 			}
-			parent.onmouseup = function (e) {
-				parent.onmousemove = null;
+			parent.onmouseup = parent.onmouseleave = function (e) {
 				x = parseInt(x,10)
 				y = parseInt(y,10)
 				width = parseInt(width,10)
@@ -437,10 +451,13 @@ var Labelimg = (function () {
 					return;
 				}
 				document.querySelector('.lbi-mask').style.display = 'block';
+				// 删除 move 和 up 事件，否则事件会一直保留，产生副作用，比如从 svg 外部滑入抬起鼠标也会执行事件
+				parent.onmousemove = parent.onmouseup = parent.onmouseleave = null;
 			}
 		}
 	}
 	function drawPolygon(parent) {
+		// 在执行 drawPolygon 函数之前，先把上个绘制函数事件删除，否则上个绘制函数也会一直执行
 		parent.onmousedown = parent.onmousemove = parent.onmouseup = null
 		// 绘制栈，保存起始点和每条线的 DOM 节点，当多边形绘制完毕后，需要删除之前的circle和line节点
 		parent.onclick = function (e) {
@@ -537,7 +554,7 @@ var Labelimg = (function () {
 		var itemStr = `
 			<span>${index}</span>
 			<input type="text">
-		`
+		`;
 		item.innerHTML = itemStr;
 		var labels = document.getElementsByClassName('paint-labels')[0]
 		labels.appendChild(item)
