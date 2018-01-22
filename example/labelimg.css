@@ -246,6 +246,16 @@ polygon:hover {
     color: #333;
     cursor: pointer;
 }
+.lbi-group-btn {
+    float: right;
+    color: #337ab7;
+    cursor: pointer;
+}
+.lbi-group-btn-submit {
+    float: right;
+    color: #5cb85c;
+    cursor: pointer;
+}
 .lbi-info-box {
     /*margin-top: 10px;*/
 }

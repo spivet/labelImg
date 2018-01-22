@@ -6,6 +6,7 @@ var Labelimg = (function () {
 		this.el = opt.el;
 		this.shape = opt.shape || 'polygon';
 		this.labelObj = opt.labelObj || { names: [], labels: [] };
+		this.isGroup = opt.isGroup || false;
 
 		this.x = 0;
 		this.y = 0;
@@ -100,6 +101,9 @@ var Labelimg = (function () {
 		// renderLabels(target)
 		// renderTip(target)
 		render.axisSetting(document.querySelector('.lbi-svg-box'))
+
+		// 整体结构渲染完后，给 DOM 节点绑定处理事件
+		handle()
 	}
 	// 整体UI框架的 html 结构
 	render.ui = function () {
@@ -144,7 +148,10 @@ var Labelimg = (function () {
 					</div>
 				</div>
 				<div class="lbi-side-item">
-					<p class="lbi-side-tt">标注信息</p>
+					<div class="lbi-side-tt">
+						标注信息
+						<span class="lbi-group-btn">生成组</span>
+					</div>
 					<div class="lbi-info-box"></div>
 				</div>
 			</div>
@@ -233,14 +240,14 @@ var Labelimg = (function () {
 	}
 	// 标注信息操作
 	function handleInfo()  {
-		var infoItems = document.querySelector('.lbi-info-box').children,
-			svg = document.querySelector('.lbi-svg');
+		var infoItems = document.querySelectorAll('.lbi-info-item'),
+			notg = document.querySelectorAll('.svg-child-not-g');
 		for(let i = 0; i < infoItems.length; i++) {
 			infoItems[i].onmouseenter = function (e) {
-				svg.children[i].style.strokeWidth = 10
+				notg[i].style.strokeWidth = 10
 			}
 			infoItems[i].onmouseleave = function (e) {
-				svg.children[i].style.strokeWidth = 1
+				notg[i].style.strokeWidth = 1
 			}
 		}
 	}
@@ -285,30 +292,58 @@ var Labelimg = (function () {
 		var axis = document.querySelector('.lbi-axis'),
 			xaxis = axis.firstElementChild,
 			yaxis = axis.lastElementChild;
-			target.onmousemove = function (e) {
-				xaxis.setAttribute('y1', e.offsetY - target.scrollTop)
-				xaxis.setAttribute('y2', e.offsetY - target.scrollTop)
-				yaxis.setAttribute('x1', e.offsetX - target.scrollLeft)
-				yaxis.setAttribute('x2', e.offsetX - target.scrollLeft)
-				// xaxis.style.top = e.offsetY +'px'
-				// yaxis.style.left = e.offsetX +'px'			
+		target.onmousemove = function (e) {
+			xaxis.setAttribute('y1', e.offsetY - target.scrollTop)
+			xaxis.setAttribute('y2', e.offsetY - target.scrollTop)
+			yaxis.setAttribute('x1', e.offsetX - target.scrollLeft)
+			yaxis.setAttribute('x2', e.offsetX - target.scrollLeft)
+		}
+	}
+
+	// ================================================================
+	// 插件里，所有元素的 DOM 相关操作
+	// 工具栏 lbi-tool-box 里的几个按钮的处理事件，单独放在 tool 对象里
+	// ================================================================
+	function handle() {
+		handle.groupBtn()
+	}
+	handle.groupBtn = function () {
+		var create = document.querySelector('.lbi-group-btn');
+		create.onclick = function () {
+			var svg = document.querySelector('.lbi-svg');
+			// 首先筛选出 svg 中不是 g 元素的子元素
+			var notg = Array.prototype.filter.call(svg.children, function(child){
+				return child.tagName.toLowerCase() !== 'g';
+			});
+			// 创建分组元素 g，然后把不是 g 元素的子元素放入元素 g 中，并添加到 svg 里
+			var g = makeElementNS('g', { 'data-groupId': svg.children.length - notg.length + 1 });
+			for(let i = 0; i < notg.length; i++) {
+				if (notg[i].tagName.toLowerCase() !== 'g') {
+					g.appendChild(notg[i])
+				}
 			}
-		
+			svg.appendChild(g)
+
+			var infoBox = document.querySelector('.lbi-info-box');
+			// 首先筛选出 lbi-info-box 中 className 不等于 lbi-info-list 的子元素
+			var notInfoItem = Array.prototype.filter.call(infoBox.children, function(child){
+				return child.className !== 'lbi-info-list';
+			});
+			// 创建分组元素 g，然后把不是 g 元素的子元素放入元素 g 中，并添加到 svg 里
+			var list = document.createElement('div');
+			list.className = 'lbi-info-list';
+			for(let i = 0; i < notInfoItem.length; i++) {
+					list.appendChild(notInfoItem[i])
+			}
+			infoBox.appendChild(list)
+		}
 	}
 
-	function renderLabels(target) {
-		var labels = document.createElement('ul');
-		labels.className = 'paint-labels';
-		target.appendChild(labels);
-	}
-	function renderTip(target) {
-		var tip = document.createElement('div');
-		tip.className = 'paint-tip';
-		target.appendChild(tip)
-	}
 
+	// ===============================================================
 	// toobar 里每个按钮被点击后所执行的操作
 	// 在 renderToolbar() 函数的末尾调用，当 toobar 渲染完毕后执行
+	// ===============================================================
 	function tool() {
 		var toolbox = document.querySelector('.lbi-tool-box');
 		toolbox.addEventListener('click', function (e) {
@@ -396,12 +431,13 @@ var Labelimg = (function () {
 			_self.x = e.offsetX * _self.kx;
 			_self.y = e.offsetY * _self.ky;
 			var attrs = {
+				'class': 'svg-child-not-g',
 				'cx': _self.x,
 				'cy': _self.y,
 				'r': 2,
 				'stroke': _self.color_active,
 				'fill': _self.color_active,
-				'data-index': parent.children.length,
+				'data-index': parent.children.length + 1,
 				'data-position': `[${_self.x}, ${_self.y}]`
 			};
 			var point = createPoint(attrs)
@@ -419,6 +455,7 @@ var Labelimg = (function () {
 			_self.x = e.offsetX * _self.kx;
 			_self.y = e.offsetY * _self.ky;
 			var attrs = {
+				'class': 'svg-child-not-g',
 				x: _self.x,
 				y: _self.y,
 				width: 0,
@@ -448,6 +485,7 @@ var Labelimg = (function () {
 				rect.setAttribute('data-index', parent.children.length);
 				if (_self.x === e.offsetX * _self.kx && _self.y === e.offsetY * _self.ky) {
 					parent.removeChild(rect);
+					parent.onmousemove = parent.onmouseup = parent.onmouseleave = null;
 					return;
 				}
 				document.querySelector('.lbi-mask').style.display = 'block';
@@ -463,7 +501,13 @@ var Labelimg = (function () {
 		parent.onclick = function (e) {
 			if(e.target.tagName === 'circle') {
 				var points = _self.polygonConfig.points.join(' ')
-				var polygon = createPolygon(points)
+				var attrs = {
+					'class': 'svg-child-not-g',
+					'points': points,
+					'fill': _self.color_active,
+					'style': 'stroke:purple;stroke-width:1;opacity:.3'
+				};
+				var polygon = createPolygon(attrs)
 				polygon.setAttribute('data-position', JSON.stringify(_self.polygonConfig.points))
 				parent.appendChild(polygon)
 				_self.polygonConfig.stack.forEach(function (item) {
@@ -536,13 +580,8 @@ var Labelimg = (function () {
 
 		return rect;
 	}
-	function createPolygon(points) {
-		var opt = {
-			points: points,
-			fill: _self.color_active,
-			style: 'stroke:purple;stroke-width:1;opacity:.3'
-		};
-		var polygon = makeElementNS('polygon', opt)
+	function createPolygon(attrs) {
+		var polygon = makeElementNS('polygon', attrs)
 
 		return polygon;
 	}
