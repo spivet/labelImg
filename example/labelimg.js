@@ -254,13 +254,13 @@ var Labelimg = (function () {
 
 	// 设置颜色选择操作
 	render.handleColor = function () {
+		var active = document.querySelector('span[data-color="'+ _self.color_active +'"]')
+		active.style.backgroundColor = _self.color_active
 		var colors = document.querySelectorAll('.lbi-color-item');
 		for(let i = 0; i < colors.length; i++) {
 			colors[i].onclick = function (e) {
 				_self.color_active = colors[i].style.backgroundColor = colors[i].dataset.color;
-				var siblings = Array.prototype.filter.call(colors, function (item, index) {
-					return item !== colors[i]
-				});
+				var siblings = getSiblings(colors, colors[i])
 				siblings.forEach(function (item) {
 					item.style.backgroundColor = '#fff'
 				})
@@ -269,10 +269,20 @@ var Labelimg = (function () {
 	}
 	// 标注方式操作
 	render.handleShape = function () {
+		var active = document.querySelector('button[data-shape="'+ _self.shape +'"]')
+		active.style.backgroundColor = '#e6e6e6'
+		active.style.border = '1px solid #adadad'
 		var shapes = document.querySelectorAll('.lbi-shape-btn');
 		for(let i = 0; i < shapes.length; i++) {
 			shapes[i].onclick = function (e) {
 				_self.shape = shapes[i].dataset.shape;
+				shapes[i].style.backgroundColor = '#e6e6e6'
+				shapes[i].style.border = '1px solid #adadad'
+				var siblings = getSiblings(shapes, shapes[i])
+				siblings.forEach(function (item) {
+					item.style.backgroundColor = '#fff'
+					item.style.border = '1px solid #ccc'
+				})
 				draw()
 			}
 		}
@@ -618,6 +628,16 @@ var Labelimg = (function () {
 		}
 
 		return ele;
+	}
+	/**
+	 * 获取兄弟元素
+	 */
+	function getSiblings(nodes, target) {
+		var siblings = Array.prototype.filter.call(nodes, function (item, index) {
+			return item !== target
+		});
+
+		return siblings;
 	}
 	return Labelimg;
 })()
