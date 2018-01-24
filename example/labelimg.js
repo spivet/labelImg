@@ -453,7 +453,7 @@ var Labelimg = (function () {
 				'r': 2,
 				'stroke': _self.color_active,
 				'fill': _self.color_active,
-				'data-index': parent.children.length + 1,
+				'data-index': parent.children.length - parent.getElementsByTagName('g').length + 1,
 				'data-position': `[${_self.x}, ${_self.y}]`
 			};
 			var point = createPoint(attrs)
@@ -498,7 +498,7 @@ var Labelimg = (function () {
 				height = parseInt(height,10)
 
 				rect.setAttribute('data-position', '[[' + x + ',' + y + '], [' + (x + width) + ',' + y + '], [' + (x + width) + ',' + (y + height) + '], [' + x + ',' + (y + height) + ']]');
-				rect.setAttribute('data-index', parent.children.length);
+				rect.setAttribute('data-index', parent.children.length - parent.getElementsByTagName('g').length);
 				if (_self.x === e.offsetX * _self.kx && _self.y === e.offsetY * _self.ky) {
 					parent.removeChild(rect);
 					parent.onmousemove = parent.onmouseup = parent.onmouseleave = null;
@@ -529,7 +529,7 @@ var Labelimg = (function () {
 				_self.polygonConfig.stack.forEach(function (item) {
 					parent.removeChild(item)
 				})
-				polygon.setAttribute('data-index', parent.children.length)
+				polygon.setAttribute('data-index', parent.children.length - parent.getElementsByTagName('g').length)
 				document.querySelector('.lbi-mask').style.display = 'block';
 				_self.polygonConfig.stack = []
 				_self.polygonConfig.points = []
@@ -589,7 +589,7 @@ var Labelimg = (function () {
 						'points': linePoints.join(' '),
 						'fill': 'none',
 						'stroke': _self.color_active,
-						'data-index': parent.children.length + 1,
+						'data-index': parent.children.length - parent.getElementsByTagName('g').length + 1,
 						'data-position': linePoints
 					};
 					var polyline = document.querySelector('.polyline-active');
@@ -628,7 +628,7 @@ var Labelimg = (function () {
 					'points': movePoints.join(' '),
 					'fill': 'none',
 					'stroke': _self.color_active,
-					'data-index': parent.children.length + 1,
+					'data-index': parent.children.length - parent.getElementsByTagName('g').length + 1,
 					'data-position': linePoints
 				};
 				var polyline = document.querySelector('.polyline-active');
