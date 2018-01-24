@@ -1,6 +1,5 @@
 var Labelimg = (function () {
 	var _self; // 该插件内的全局变量，用来获取 this
-	var _xaxis, _yaxis;
 
 	function Labelimg(opt) {
 		this.el = opt.el;
@@ -145,6 +144,7 @@ var Labelimg = (function () {
 						<button class="lbi-shape-btn" type="button" data-shape="point">打点</button>
 						<button class="lbi-shape-btn" type="button" data-shape="rect">画框</button>
 						<button class="lbi-shape-btn" type="button" data-shape="polygon">描边</button>
+						<button class="lbi-shape-btn" type="button" data-shape="polyline">画线</button>
 					</div>
 				</div>
 				<div class="lbi-side-item">
@@ -310,6 +310,7 @@ var Labelimg = (function () {
 		}
 	}
 
+
 	// ================================================================
 	// 插件里，所有元素的 DOM 相关操作
 	// 工具栏 lbi-tool-box 里的几个按钮的处理事件，单独放在 tool 对象里
@@ -414,7 +415,9 @@ var Labelimg = (function () {
 	}
 
 
+	// ============================================================
 	// 绘制图形的方法
+	// ============================================================
 	function draw() {
 		var svg = document.querySelector('.lbi-svg');
 
@@ -427,6 +430,9 @@ var Labelimg = (function () {
 				break;
 			case 'polygon':
 				drawPolygon(svg)
+				break;
+			case 'polyline':
+				drawPolyline(svg)
 				break;
 			default:
 				// statements_def
@@ -562,13 +568,86 @@ var Labelimg = (function () {
 			}
 		}
 	}
+	function drawPolyline(parent) {
+		// 在执行 drawPoint 函数之前，先把上个绘制函数事件删除，否则上个绘制函数也会一直执行
+		parent.onclick = parent.onmouseup = null
 
-	// 创建 svg 图形
-	/**
-	 * 创建 圆形
-	 * @param  {Object} attrs     圆的 html 属性
-	 * @return {DOM Node}     DOM节点
-	 */
+		var linePoints = [];
+		parent.onmousedown = function (e){
+			// 禁止鼠标右键弹出菜单
+			document.oncontextmenu = function () {
+				return false;
+			}
+			// 点击鼠标左键
+			if (e.buttons === 1) {
+				_self.x = e.offsetX * _self.kx;
+				_self.y = e.offsetY * _self.ky;
+				linePoints.push([_self.x, _self.y])
+				if (linePoints.length > 1) {
+					var attrs = {
+						'class': 'svg-child-not-g polyline-active',
+						'points': linePoints.join(' '),
+						'fill': 'none',
+						'stroke': _self.color_active,
+						'data-index': parent.children.length + 1,
+						'data-position': linePoints
+					};
+					var polyline = document.querySelector('.polyline-active');
+					if (polyline) {
+						polyline.setAttribute('points', linePoints.join(' '))
+						polyline.setAttribute('data-position', JSON.stringify(linePoints))
+					} else {
+						polyline = createPolyline(attrs)
+					}
+					parent.appendChild(polyline)
+				}
+				return ;
+			}
+			// 点击鼠标右键
+			if (e.buttons === 2) {
+				if (linePoints.length < 2) {
+					var polyline = document.querySelector('.polyline-active');
+					polyline.parentNode.removeChild(polyline)
+					linePoints = []
+					return ;
+				}
+				document.querySelector('.polyline-active').setAttribute('points', linePoints.join(' '))
+				linePoints = []
+				document.querySelector('.polyline-active').classList.remove('polyline-active')
+				document.querySelector('.lbi-mask').style.display = 'block';
+			}
+		}
+		parent.onmousemove = function (e) {
+			_self.x = e.offsetX * _self.kx;
+			_self.y = e.offsetY * _self.ky;
+			var movePoint = [_self.x, _self.y];
+			var movePoints = linePoints.concat(movePoint)
+			if (linePoints.length > 0) {
+				var attrs = {
+					'class': 'svg-child-not-g polyline-active',
+					'points': movePoints.join(' '),
+					'fill': 'none',
+					'stroke': _self.color_active,
+					'data-index': parent.children.length + 1,
+					'data-position': linePoints
+				};
+				var polyline = document.querySelector('.polyline-active');
+				if (polyline) {
+					polyline.setAttribute('points', movePoints.join(' '))
+				} else {
+					polyline = createPolyline(attrs)
+				}
+				parent.appendChild(polyline)
+			}
+		}
+	}
+
+
+	// =============================================================
+	// 创建 svg 图形，暂时给每个图形创建都写一个函数，因为以后可能会对不同的元素添加不同的操作
+	// @param  {Object} attrs     圆的 html 属性
+	// @return {DOM Node}     DOM节点
+	// =============================================================
 	function createPoint(attrs) {
 		var circle = makeElementNS('circle', attrs)
 		circle.addEventListener('mouseover', function (e) {
@@ -581,19 +660,24 @@ var Labelimg = (function () {
 		return circle;
 	}
 	function createLine(attrs) {
-		var line = makeElementNS('line', attrs)
+		var line = makeElementNS('line', attrs);
 
 		return line;
 	}
 	function createRect(attrs) {
-		var rect = makeElementNS('rect', attrs)
+		var rect = makeElementNS('rect', attrs);
 
 		return rect;
 	}
 	function createPolygon(attrs) {
-		var polygon = makeElementNS('polygon', attrs)
+		var polygon = makeElementNS('polygon', attrs);
 
 		return polygon;
+	}
+	function createPolyline(attrs) {
+		var polyline = makeElementNS('polyline', attrs);
+
+		return polyline;
 	}
 
 	// 创建标注对象属性
