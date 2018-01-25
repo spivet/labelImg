@@ -6,6 +6,7 @@ var Labelimg = (function () {
 		this.shape = opt.shape || 'polygon';
 		this.labelInfo = opt.labelInfo || [{ names: '', labels: [] }];
 		this.isGroup = opt.isGroup || false;
+		this.groupList = opt.groupList || ['任意对象','对象']
 
 		this.x = 0;
 		this.y = 0;
@@ -202,8 +203,7 @@ var Labelimg = (function () {
 		infoItem.className = 'lbi-info-item';
 
 		var infoHtml = `
-			<p class="lbi-info-name"><b>名称：</b>${name}</p>
-			<p class="lbi-info-label"><b>标签：</b>${label}</p>
+			<p class="lbi-info-name"><b>${name}：</b>${label}</p>
 		`;
 		infoItem.innerHTML = infoHtml
 		return infoItem;
@@ -313,6 +313,21 @@ var Labelimg = (function () {
 			yaxis.setAttribute('x2', e.offsetX - target.scrollLeft)
 		}
 	}
+	render.infoTitle = function (list) {
+		var infoTitleHtml = `
+			<div class="lbi-info-title">
+				标注对象：
+				<select class="lbi-info-select">
+		`
+		for(let i = 0; i < list.length; i++) {
+			infoTitleHtml += `<option value="${list[i]}">${list[i]}</option>`
+		}
+		infoTitleHtml += `
+				</select>
+			</div>
+		`
+		return infoTitleHtml;
+	}
 
 
 	// ================================================================
@@ -347,10 +362,23 @@ var Labelimg = (function () {
 			// 创建分组元素 g，然后把不是 g 元素的子元素放入元素 g 中，并添加到 svg 里
 			var list = document.createElement('div');
 			list.className = 'lbi-info-list';
+			list.innerHTML = render.infoTitle( _self.groupList)
 			for(let i = 0; i < notInfoItem.length; i++) {
 					list.appendChild(notInfoItem[i])
 			}
 			infoBox.appendChild(list)
+			handle.infoSelect()
+		}
+	}
+	handle.infoSelect = function () {
+		var infoSelect = document.querySelectorAll('.lbi-info-select');
+		for(let i = 0; i < infoSelect.length; i++) {
+			var g = document.querySelector('.lbi-svg').getElementsByTagName('g')[i];
+			g.setAttribute('data-name', infoSelect[i].value)
+			infoSelect[i].onchange = function () {
+				console.log(this.value)
+				g.setAttribute('data-name', this.value)
+			}			
 		}
 	}
 

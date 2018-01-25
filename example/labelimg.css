@@ -172,10 +172,20 @@
 .lbi-info-box {
     /*margin-top: 10px;*/
 }
+.lbi-info-list {
+    border-bottom: 1px solid #eee;
+}
+.lbi-info-title {
+    margin-top: 20px;
+    margin-bottom: 5px;
+    font-size: 14px;
+}
+.lbi-info-select {
+    width: 100px;
+}
 .lbi-info-item {
     line-height: 20px;
-    padding: 10px;
-    border-bottom: 1px solid #eee;
+    padding: 5px 15px;
     font-size: 14px;
     color: #333;
 }
