@@ -37,10 +37,16 @@
 		var label = new Labelimg({
 			el: document.getElementById('canva'),
 			shape: 'point',
-			labelObj: {
-				names: ['左眼','右眼','鼻子','嘴巴'],
-				labels: ['可见','不可见']
-			}
+			labelInfo: [
+				{
+					name: '左眼',
+					labels: ['可见','不可见']
+				},
+				{
+					name: '右眼',
+					labels: ['你猜','啊啊']
+				}
+			]
 		})
 		label.addImg(list[0].imgUrl)
 		var next = document.getElementById('next');

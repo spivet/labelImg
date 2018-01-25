@@ -4,7 +4,7 @@ var Labelimg = (function () {
 	function Labelimg(opt) {
 		this.el = opt.el;
 		this.shape = opt.shape || 'polygon';
-		this.labelObj = opt.labelObj || { names: [], labels: [] };
+		this.labelInfo = opt.labelInfo || [{ names: '', labels: [] }];
 		this.isGroup = opt.isGroup || false;
 
 		this.x = 0;
@@ -91,9 +91,7 @@ var Labelimg = (function () {
 		render.handleShape()
 
 		// 获取 selectBox 的 html 结构字符串并渲染
-		var selectHtml = render.selectBox(this.labelObj);
-		document.getElementById('lbi-select-names').innerHTML = selectHtml.namesHtml;
-		document.getElementById('lbi-select-labels').innerHTML = selectHtml.labelsHtml;
+		document.getElementById('lbi-select-names').innerHTML = render.selectBox(this.labelInfo);
 		render.handleSelect()
 		// renderToolbar(target, tools)
 		// renderBoard(target)
@@ -171,18 +169,24 @@ var Labelimg = (function () {
 		return toolboxHtml;
 	}
 	 // 标注对象 lbi-select-box 的名称和属性 html 结构
-	render.selectBox = function (labelObj) {
+	render.selectBox = function (labelInfo) {
+		var obj = {};
 		var namesHtml = '<option value="">-- 请选择 --</option>';
-		labelObj.names.forEach(function (name) {
-			namesHtml += `<option value="${name}">${name}</option>`
+		labelInfo.forEach(function (item) {
+			namesHtml += `<option value="${item.name}">${item.name}</option>`;
+			obj[item.name] = item.labels
 		})
 
-		var labelsHtml = '<option value="">-- 请选择 --</option>';
-		labelObj.labels.forEach(function (label) {
-			labelsHtml += `<option value="${label}">${label}</option>`
-		})
+		// 标注对象名称发生改变时，对应的标签也发生改变
+		document.getElementById('lbi-select-names').onchange = function () {
+			var labelsHtml = '<option value="">-- 请选择 --</option>';
+			obj[this.value].forEach(function (label) {
+				labelsHtml += `<option value="${label}">${label}</option>`
+			})
+			document.getElementById('lbi-select-labels').innerHTML = labelsHtml
+		}
 
-		return { namesHtml, labelsHtml };
+		return namesHtml;
 	}
 	// 颜色选择 lbi-color-box 的 html 结构
 	render.colorBox = function (colors) {
