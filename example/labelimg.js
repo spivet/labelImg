@@ -1,4 +1,6 @@
-var Labelimg = (function () {
+'use strict';
+
+;(function (window) {
 	var _self; // 该插件内的全局变量，用来获取 this
 
 	function Labelimg(opt) {
@@ -755,5 +757,6 @@ var Labelimg = (function () {
 
 		return siblings;
 	}
-	return Labelimg;
-})()
+	
+	window.Labelimg = Labelimg;
+})(window)
