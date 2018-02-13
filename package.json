@@ -1,11 +1,9 @@
 {
-  "name": "labelImg.js",
+  "name": "labelImg",
   "version": "1.0.0",
-  "main": "index.js",
+  "description": "基于svg的图片标注工具",
+  "main": "src/labelimg.js",
   "repository": "https://github.com/Mcbai/labelImg.js.git",
   "author": "Mcbai <24224596@qq.com>",
-  "license": "MIT",
-  "dependencies": {
-    "express": "^4.16.2"
-  }
+  "license": "MIT"
 }
